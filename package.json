@@ -1,0 +1,11 @@
+{
+  "name": "amd-pokecast",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node server.mjs"
+  },
+  "devDependencies": {
+    "serve": "^14.2.4"
+  }
+}
