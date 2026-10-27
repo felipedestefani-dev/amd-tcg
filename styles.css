@@ -871,6 +871,22 @@ body.has-cookie { padding-bottom: 0; }
   background: #f3f4f6;
   font-size: 0.78rem;
 }
+.lang-field { display: grid; gap: 0.35rem; }
+.lang-field > span { font-size: 0.82rem; font-weight: 650; color: var(--muted); }
+.flag-picks { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.flag-pick {
+  width: 40px;
+  height: 32px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+.flag-pick svg { width: 24px; height: 16px; display: block; border-radius: 2px; }
+.flag-pick.is-on { border-color: var(--red); box-shadow: 0 0 0 2px rgba(200, 30, 30, 0.2); }
 .name-picks { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 .name-picks button {
   border: 1px solid var(--line);

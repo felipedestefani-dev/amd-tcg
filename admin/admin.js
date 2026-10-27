@@ -126,6 +126,35 @@
     return `<label>${esc(label)}<input name="${esc(name)}" type="${type || "text"}" value="${esc(value)}" /></label>`;
   }
 
+  function langCode(value) {
+    const code = String(value || "").trim().toUpperCase();
+    const aliases = { "PT-BR": "PT", BR: "PT", POR: "PT", ENG: "EN", US: "EN", JA: "JP", KR: "KO", CN: "ZH", CH: "ZH" };
+    return aliases[code] || code || "PT";
+  }
+
+  function langField(value) {
+    const current = langCode(value);
+    const flags = [
+      ["PT", "Português", `<svg viewBox="0 0 20 14" aria-hidden="true"><rect width="20" height="14" rx="1.5" fill="#009b3a"/><polygon points="10,1.2 18.6,7 10,12.8 1.4,7" fill="#fedf00"/><circle cx="10" cy="7" r="2.5" fill="#002776"/></svg>`],
+      ["EN", "Inglês", `<svg viewBox="0 0 20 14" aria-hidden="true"><rect width="20" height="14" rx="1.5" fill="#bf0a30"/><path d="M0 2h20M0 6h20M0 10h20" stroke="#fff" stroke-width="2"/><rect width="8" height="7" fill="#002868"/></svg>`],
+      ["JP", "Japonês", `<svg viewBox="0 0 20 14" aria-hidden="true"><rect width="20" height="14" rx="1.5" fill="#fff"/><circle cx="10" cy="7" r="3.1" fill="#bc002d"/></svg>`],
+      ["KO", "Coreano", `<svg viewBox="0 0 20 14" aria-hidden="true"><rect width="20" height="14" rx="1.5" fill="#fff"/><circle cx="10" cy="7" r="3" fill="#cd2e3a"/><path d="M10 4a3 3 0 0 1 0 6 1.5 1.5 0 0 1 0-3 1.5 1.5 0 0 0 0-3z" fill="#0047a0"/></svg>`],
+      ["ZH", "Chinês", `<svg viewBox="0 0 20 14" aria-hidden="true"><rect width="20" height="14" rx="1.5" fill="#de2910"/><polygon points="3.2,2.2 3.7,3.6 2.4,2.7 4,2.7 2.7,3.6" fill="#ffde00"/></svg>`],
+      ["ES", "Espanhol", `<svg viewBox="0 0 20 14" aria-hidden="true"><rect width="20" height="14" rx="1.5" fill="#c60b1e"/><rect y="3.5" width="20" height="7" fill="#ffc400"/></svg>`],
+      ["FR", "Francês", `<svg viewBox="0 0 20 14" aria-hidden="true"><rect width="20" height="14" rx="1.5" fill="#ed2939"/><rect width="13.3" height="14" fill="#fff"/><rect width="6.7" height="14" fill="#002395"/></svg>`],
+      ["DE", "Alemão", `<svg viewBox="0 0 20 14" aria-hidden="true"><rect width="20" height="14" rx="1.5" fill="#ffce00"/><rect width="20" height="9.3" fill="#dd0000"/><rect width="20" height="4.7" fill="#000"/></svg>`],
+      ["IT", "Italiano", `<svg viewBox="0 0 20 14" aria-hidden="true"><rect width="20" height="14" rx="1.5" fill="#ce2b37"/><rect width="13.3" height="14" fill="#fff"/><rect width="6.7" height="14" fill="#009246"/></svg>`],
+    ];
+    const known = flags.some(([code]) => code === current);
+    return `
+      <div class="lang-field">
+        <span>Idioma</span>
+        <input type="hidden" name="lang" value="${esc(known ? current : value || "PT")}" />
+        <div class="flag-picks">
+          ${flags.map(([code, label, svg]) => `<button type="button" class="flag-pick${code === current ? " is-on" : ""}" data-lang="${code}" title="${label}" aria-label="${label}">${svg}</button>`).join("")}
+        </div>
+      </div>`;
+  }
   function priceField(value) {
     const amount = Number(value);
     const shown = value === "" || value == null || !Number.isFinite(amount) ? "" : amount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -185,7 +214,7 @@
         <input type="hidden" name="finish" value="${esc(p.finish || "Lacrado")}" />
         <div class="row-2">${field("qty", "Quantidade", p.qty, "number")}${priceField(p.price)}</div>` : `
         <div class="row-2">${field("number", "Número", p.number)}${field("rarity", "Raridade", p.rarity)}</div>
-        <div class="row-2">${field("condition", "Condição", p.condition)}${field("lang", "Idioma", p.lang)}</div>
+        <div class="row-2">${field("condition", "Condição", p.condition)}${langField(p.lang)}</div>
         <div class="row-2">${field("finish", "Acabamento", p.finish)}${field("qty", "Quantidade", p.qty, "number")}</div>
         ${priceField(p.price)}`;
     return `
@@ -786,6 +815,13 @@ create policy "ler clientes" on public.customers for select to authenticated usi
       showPreview(mode === "sealed" ? "" : autoArt());
     };
     document.getElementById("editor").addEventListener("submit", saveProduct);
+    slot.querySelectorAll("[data-lang]").forEach((button) => {
+      button.onclick = () => {
+        const input = slot.querySelector("[name=lang]");
+        if (input) input.value = button.dataset.lang;
+        slot.querySelectorAll("[data-lang]").forEach((item) => item.classList.toggle("is-on", item === button));
+      };
+    });
     const pick = document.getElementById("set-pick-q");
     const pickResults = document.getElementById("set-pick-results");
     const chosenBox = document.getElementById("set-chosen");
