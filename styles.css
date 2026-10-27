@@ -4,7 +4,7 @@
   --line: #e6e7eb;
   --text: #161616;
   --muted: #6b7280;
-  --red: #4c18b8;
+  --red: #7c44fb;
   --ink: #111111;
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
   --radius: 18px;
@@ -140,7 +140,7 @@ button, input, select { font: inherit; color: inherit; }
 }
 .ghost { background: transparent; color: var(--text); }
 .solid, .buy, .ask { background: var(--red); color: #fff; }
-.solid:hover, .buy:hover, .ask:hover { background: #3b1096; }
+.solid:hover, .buy:hover, .ask:hover { background: #6a32ef; }
 .buy:active, .ask:active, .solid:active { transform: scale(0.98); }
 .buy img, .ask img { width: 16px; height: 16px; object-fit: contain; filter: invert(1); }
 
@@ -269,7 +269,7 @@ button, input, select { font: inherit; color: inherit; }
   margin: 0;
   border-radius: 0;
   overflow: hidden;
-  background: #2a1248;
+  background: #6a38e8;
 }
 .hero-dots {
   display: flex;
@@ -710,7 +710,7 @@ body.has-cookie { padding-bottom: 0; }
   place-items: center;
   padding: 1.5rem;
   background:
-    radial-gradient(ellipse at top, rgba(76, 24, 184, 0.14), transparent 52%),
+    radial-gradient(ellipse at top, rgba(124, 68, 251, 0.18), transparent 52%),
     #f6f6f7;
 }
 .desk { display: grid; grid-template-columns: 230px minmax(0, 1fr); min-height: 100vh; }
@@ -748,7 +748,7 @@ body.has-cookie { padding-bottom: 0; }
 .desk-side .ghost { color: var(--muted); }
 .desk-store { margin-top: 0.45rem; background: var(--red); color: #fff; justify-content: center; gap: 0.4rem; }
 .desk-store img, .admin-body .solid img { width: 16px; height: 16px; object-fit: contain; filter: invert(1); }
-.desk-store:hover { background: #3b1096; }
+.desk-store:hover { background: #6a32ef; }
 .desk-main { padding: 1.35rem 1.4rem 3rem; max-width: 1080px; }
 .desk-head { display: flex; justify-content: space-between; gap: 1rem; align-items: end; margin-bottom: 1rem; }
 .desk-head h1 { margin: 0; font-size: 1.6rem; letter-spacing: -0.03em; }

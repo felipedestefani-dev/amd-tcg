@@ -131,7 +131,7 @@
       <div class="login-wrap">
         <section class="login-card">
           <a class="brand" href="/">
-            <img src="/assets/logo-mark.png?v=8" alt="A.M.D TCG" width="140" height="96" />
+            <img src="/assets/logo-mark.png?v=9" alt="A.M.D TCG" width="140" height="96" />
           </a>
           <h1>Painel</h1>
           <p>Entre com o e-mail e a senha do administrador.</p>
@@ -276,7 +276,7 @@
       <div class="desk">
         <aside class="desk-side">
           <a class="brand" href="/admin">
-            <img src="/assets/logo-mark.png?v=8" alt="" width="76" height="76" />
+            <img src="/assets/logo-mark.png?v=9" alt="" width="76" height="76" />
             <span>A.M.D<small>Painel</small></span>
           </a>
           <nav class="desk-nav">
