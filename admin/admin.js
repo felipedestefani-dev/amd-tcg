@@ -425,21 +425,21 @@ create policy "ler visitas" on public.visits for select to authenticated using (
         <input id="visit-to" type="date" value="${esc(visitTo)}" />
       </div>
       <div class="stats">
-        <article class="stat dark"><span>Pessoas</span><b>${people.size}</b></article>
-        <article class="stat"><span>Páginas vistas</span><b>${rows.length}</b></article>
-        <article class="stat"><span>Hoje</span><b>${todayPeople.size}</b></article>
+        <article class="stat dark"><img src="/assets/icons/visits-people.svg" alt="" /><span>Pessoas</span><b>${people.size}</b></article>
+        <article class="stat"><img src="/assets/icons/visits-pages.svg" alt="" /><span>Páginas vistas</span><b>${rows.length}</b></article>
+        <article class="stat"><img src="/assets/icons/visits-today.svg" alt="" /><span>Hoje</span><b>${todayPeople.size}</b></article>
       </div>
       <section class="panel">
-        <h2>Pessoas por dia</h2>
+        <h2 class="with-icon"><img src="/assets/icons/visits-people.svg" alt="" />Pessoas por dia</h2>
         <div class="bars">${bars || `<p class="empty">Nenhuma visita neste período.</p>`}</div>
       </section>
       <div class="split">
         <section class="panel">
-          <h2>Páginas mais vistas</h2>
+          <h2 class="with-icon"><img src="/assets/icons/visits-pages.svg" alt="" />Páginas mais vistas</h2>
           ${pageRows.map(([path, count]) => `<div class="rank"><span>${esc(pageLabel(path))}</span><strong>${count}</strong><small>${rows.length ? Math.round(count / rows.length * 100) : 0}%</small><i style="width:${Math.round(count / pageMax * 100)}%"></i></div>`).join("") || `<p class="empty">Sem páginas.</p>`}
         </section>
         <section class="panel">
-          <h2>Cidades</h2>
+          <h2 class="with-icon"><img src="/assets/icons/visits-city.svg" alt="" />Cidades</h2>
           ${cityRows.map(([city, count]) => `<div class="rank"><span>${esc(city)}</span><strong>${count}</strong><small>${rows.length ? Math.round(count / rows.length * 100) : 0}%</small><i style="width:${Math.round(count / cityMax * 100)}%"></i></div>`).join("") || `<p class="empty">Sem cidades.</p>`}
         </section>
       </div>`);
