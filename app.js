@@ -377,7 +377,7 @@
           <section class="auth-card">
             <a class="brand" href="#/" aria-label="A.M.D TCG, início"><img src="assets/logo-mark.png?v=10" alt="" width="120" height="80" /></a>
             <h1 class="page-title">Entrar</h1>
-            <p class="lede">${user ? esc(user.name) + " · " + esc(user.email) : "Bem-vindo de volta."}</p>
+            <p class="lede">${personName(user?.name, user?.email) || "Bem-vindo de volta."}</p>
             <form class="form" id="signin">
               <label>E-mail<input name="email" type="email" required value="${esc(user?.email || "")}" autocomplete="email" /></label>
               <label>Senha<input name="password" type="password" required autocomplete="current-password" /></label>
@@ -569,7 +569,7 @@
     event.preventDefault();
     const form = new FormData(event.target);
     const profile = {
-      name: String(form.get("name") || "").trim(),
+      name: personName(form.get("name")),
       email: String(form.get("email") || "").trim(),
       phone: String(form.get("phone") || "").trim(),
     };
@@ -606,18 +606,34 @@
     if (error && !/duplicate|unique/i.test(error.message || "")) console.warn(error.message);
   }
 
+  function personName(value, email) {
+    const text = String(value || "").trim();
+    if (!text || text.includes("@")) return "";
+    const local = String(email || "").split("@")[0].toLowerCase();
+    if (local && text.toLowerCase() === local) return "";
+    return text.split(/\s+/).filter(Boolean).map((part) => part.charAt(0).toLocaleUpperCase("pt-BR") + part.slice(1)).join(" ");
+  }
+
   function rememberAccount(profile) {
     const current = account() || {};
+    const email = (profile.email || current.email || "").trim();
     const next = {
-      name: (profile.name || current.name || "").trim(),
-      email: (profile.email || current.email || "").trim(),
+      name: personName(profile.name, email) || personName(current.name, email),
+      email,
       phone: (profile.phone || current.phone || "").trim(),
     };
-    if (!next.name && next.email) next.name = next.email.split("@")[0];
     if (!next.email) return null;
     localStorage.setItem("amd.account", JSON.stringify(next));
     sessionStorage.setItem("amd.session", next.email);
     return next;
+  }
+
+  async function nameFor(sb, email, fallback) {
+    const given = personName(fallback, email);
+    if (given) return given;
+    if (!sb || !email) return "";
+    const { data } = await sb.from("customers").select("name").eq("email", email).maybeSingle();
+    return personName(data?.name, email);
   }
 
   async function onSignin(event) {
@@ -634,7 +650,7 @@
         if (error) { msg.textContent = error.message; return; }
         const meta = data.user?.user_metadata || {};
         const profile = rememberAccount({
-          name: meta.name || saved?.name || "",
+          name: await nameFor(sb, data.user?.email || email, meta.name),
           email: data.user?.email || email,
           phone: meta.phone || saved?.phone || "",
         });
@@ -663,8 +679,7 @@
     if (leave) leave.hidden = !on;
     if (menuSignup) menuSignup.hidden = on;
     if (on) {
-      const raw = user?.name || "Conta";
-      link.textContent = (raw.includes("@") ? raw.split("@")[0] : raw).split(" ")[0];
+      link.textContent = personName(user?.name, user?.email) || "Conta";
       link.href = "#/";
     } else {
       link.textContent = "Entrar";
@@ -695,7 +710,7 @@
       const user = data.session.user;
       const meta = user.user_metadata || {};
       const profile = rememberAccount({
-        name: meta.name || "",
+        name: await nameFor(sb, user.email || "", meta.name || ""),
         email: user.email || "",
         phone: meta.phone || "",
       });
