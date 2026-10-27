@@ -17,6 +17,58 @@
     return shop.sets.find((set) => set.id === id) || { id, name: id, code: id };
   }
 
+  function setLogo(id) {
+    return `https://images.pokemontcg.io/${id}/logo.png`;
+  }
+
+  function fitSetImage(img) {
+    const symbol = () => {
+      if (img.dataset.symbol) { img.hidden = true; return; }
+      img.dataset.symbol = "1";
+      const next = img.src.replace("/logo.png", "/symbol.png");
+      if (next === img.src) { img.hidden = true; return; }
+      img.src = next;
+    };
+    const check = () => {
+      if (!img.naturalWidth || (img.naturalWidth === 640 && img.naturalHeight === 892) || img.naturalHeight > img.naturalWidth * 1.05) symbol();
+      else img.hidden = false;
+    };
+    img.onload = check;
+    img.onerror = symbol;
+    if (img.complete) check();
+  }
+
+  function paintSetPick(id) {
+    const root = document.getElementById("set-filter");
+    if (!root) return;
+    const set = id && shop.sets.find((item) => item.id === id);
+    root.dataset.value = set ? set.id : "";
+    const button = root.querySelector(".set-pick-btn");
+    const img = button.querySelector("img");
+    const label = button.querySelector("span");
+    if (!set) {
+      img.hidden = true;
+      img.removeAttribute("src");
+      label.textContent = "Todas as coleções";
+    } else {
+      img.hidden = false;
+      delete img.dataset.symbol;
+      img.src = setLogo(set.id);
+      fitSetImage(img);
+      label.textContent = set.name;
+    }
+    root.querySelectorAll(".set-pick-list button").forEach((item) => {
+      item.classList.toggle("is-on", (item.dataset.id || "") === (set ? set.id : ""));
+    });
+  }
+
+  function closeSetPick() {
+    const root = document.getElementById("set-filter");
+    const list = root.querySelector(".set-pick-list");
+    list.hidden = true;
+    root.querySelector(".set-pick-btn").setAttribute("aria-expanded", "false");
+  }
+
   function esc(value) {
     return String(value ?? "")
       .replace(/&/g, "&amp;")
@@ -353,9 +405,8 @@
     const { name, id } = route();
     const query = qInput.value.trim().toLowerCase();
     markNav(name);
-    const setFilter = document.getElementById("set-filter");
-    if (name === "set" && shop.sets.some((set) => set.id === id)) setFilter.value = id;
-    else if (name === "home") setFilter.value = "";
+    if (name === "set" && shop.sets.some((set) => set.id === id)) paintSetPick(id);
+    else if (name === "home") paintSetPick("");
 
     if (query) {
       const found = shop.products.filter((product) => {
@@ -837,10 +888,15 @@
   }
 
   function fillSets() {
-    const select = document.getElementById("set-filter");
-    const current = select.value;
-    select.innerHTML = `<option value="">Todas as coleções</option>` + shop.sets.map((set) => `<option value="${esc(set.id)}">${esc(set.name)}</option>`).join("");
-    select.value = shop.sets.some((set) => set.id === current) ? current : "";
+    const root = document.getElementById("set-filter");
+    const current = root.dataset.value || "";
+    const list = root.querySelector(".set-pick-list");
+    list.innerHTML = `<button type="button" data-id="" role="option"><span>Todas as coleções</span></button>` + shop.sets.map((set) => `
+      <button type="button" data-id="${esc(set.id)}" role="option">
+        <img alt="" data-src="${esc(setLogo(set.id))}" />
+        <span>${esc(set.name)}</span>
+      </button>`).join("");
+    paintSetPick(shop.sets.some((set) => set.id === current) ? current : "");
   }
 
   async function loadRemote() {
@@ -896,6 +952,7 @@
 
   window.addEventListener("hashchange", () => {
     qInput.value = "";
+    closeSetPick();
     setMenu(false);
     render();
     window.scrollTo(0, 0);
@@ -906,9 +963,28 @@
   });
   document.getElementById("backdrop").addEventListener("click", () => setMenu(false));
   window.addEventListener("resize", () => setMenu(document.getElementById("menu").classList.contains("is-open")));
-  document.getElementById("set-filter").addEventListener("change", (event) => {
-    const id = event.target.value;
+  const setPick = document.getElementById("set-filter");
+  const setList = setPick.querySelector(".set-pick-list");
+  setPick.querySelector(".set-pick-btn").addEventListener("click", () => {
+    const open = setList.hidden;
+    setList.hidden = !open;
+    setPick.querySelector(".set-pick-btn").setAttribute("aria-expanded", open ? "true" : "false");
+    if (!open) return;
+    setList.querySelectorAll("img[data-src]").forEach((img) => {
+      if (img.getAttribute("src")) return;
+      img.src = img.dataset.src;
+      fitSetImage(img);
+    });
+  });
+  setList.addEventListener("click", (event) => {
+    const button = event.target.closest("button");
+    if (!button) return;
+    const id = button.dataset.id || "";
+    closeSetPick();
     location.hash = id ? `#/set/${id}` : "#/";
+  });
+  document.addEventListener("click", (event) => {
+    if (!setPick.contains(event.target)) closeSetPick();
   });
   document.getElementById("search-form").addEventListener("submit", (event) => {
     event.preventDefault();

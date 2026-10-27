@@ -215,8 +215,9 @@ button, input, select { font: inherit; color: inherit; }
 }
 
 .search {
+  position: relative;
   display: grid;
-  grid-template-columns: 18px 1fr 220px;
+  grid-template-columns: 18px 1fr 240px;
   gap: 0.6rem;
   align-items: center;
   margin-bottom: 1rem;
@@ -225,17 +226,79 @@ button, input, select { font: inherit; color: inherit; }
   border: 1px solid var(--line);
   border-radius: 16px;
 }
-.search img { width: 18px; height: 18px; object-fit: contain; }
-.search input, .search select {
+.search > img { width: 18px; height: 18px; object-fit: contain; }
+.search input, .set-pick-btn {
   height: 38px;
   border: 0;
   background: transparent;
   outline: none;
 }
-.search select {
+.set-pick { position: static; min-width: 0; }
+.set-pick-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0 0.15rem 0 0.7rem;
   border-left: 1px solid var(--line);
-  padding-left: 0.7rem;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
 }
+.set-pick-btn img {
+  width: 42px;
+  height: 20px;
+  object-fit: contain;
+  flex: none;
+  background: transparent;
+}
+.set-pick-btn span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.set-pick-list {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  width: min(340px, 100%);
+  max-height: 320px;
+  overflow: auto;
+  padding: 0.35rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 18px 40px rgba(17, 17, 17, 0.12);
+}
+.set-pick-list[hidden] { display: none; }
+.set-pick-list button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 40px;
+  padding: 0.35rem 0.55rem;
+  border: 0;
+  border-radius: 10px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.set-pick-list button:hover,
+.set-pick-list button.is-on { background: #fff5f5; }
+.set-pick-list img {
+  width: 64px;
+  height: 26px;
+  object-fit: contain;
+  flex: none;
+  background: transparent;
+}
+.set-pick-list span { min-width: 0; }
 
 .banner, .panel, .card, .detail-shot, .specs, .set-link, .empty {
   background: #fff;
@@ -957,7 +1020,7 @@ body.has-cookie { padding-bottom: 0; }
   .top .search {
     flex-basis: 100%;
     order: 3;
-    grid-template-columns: 15px minmax(0, 1fr) minmax(6rem, 34%);
+    grid-template-columns: 15px minmax(0, 1fr) minmax(8.2rem, 48%);
     gap: 0.25rem;
     margin: 0;
     padding: 0 0.35rem 0 0.7rem;
@@ -966,23 +1029,24 @@ body.has-cookie { padding-bottom: 0; }
     background: #f3f3f4;
     box-shadow: inset 0 0 0 1px #e5e5e7;
   }
-  .top .search img { width: 14px; height: 14px; opacity: 0.5; }
+  .top .search > img { width: 14px; height: 14px; opacity: 0.5; }
   .top .search input,
-  .top .search select {
+  .top .set-pick-btn {
     height: 34px;
     min-width: 0;
     font-size: 0.82rem;
   }
   .top .search input::placeholder { color: #8d8d95; }
-  .top .search select {
+  .top .set-pick-btn {
     border: 0;
-    border-left: 1px solid #e1e1e4;
-    border-radius: 0;
-    padding-left: 0.4rem;
+    border-left: 1px solid #e7e7ea;
+    border-radius: 0 999px 999px 0;
+    padding-left: 0.45rem;
+    background: #fff;
     font-size: 0.72rem;
     color: #3f3f46;
-    text-overflow: ellipsis;
   }
+  .top .set-pick-btn img { width: 28px; height: 14px; opacity: 1; }
   .top .search:focus-within {
     background: #fff;
     box-shadow: inset 0 0 0 1.5px var(--red);

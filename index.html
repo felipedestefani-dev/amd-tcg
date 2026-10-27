@@ -7,7 +7,7 @@
   <meta name="description" content="Cartas avulsas e lacrados de Pokémon. A.M.D TCG." />
   <meta name="theme-color" content="#111111" />
   <link rel="icon" type="image/png" href="assets/logo-mark.png" />
-  <link rel="stylesheet" href="styles.css?v=58" />
+  <link rel="stylesheet" href="styles.css?v=59" />
 </head>
 <body>
   <div class="boot" id="boot" role="status" aria-live="polite" aria-label="Carregando">
@@ -24,10 +24,14 @@
       <img src="assets/icons/search.png" alt="" width="18" height="18" />
       <label class="sr" for="q">Buscar carta ou número</label>
       <input id="q" name="q" type="search" placeholder="Buscar por nome ou número" autocomplete="off" />
-      <label class="sr" for="set-filter">Filtrar coleção</label>
-      <select id="set-filter">
-        <option value="">Todas as coleções</option>
-      </select>
+      <label class="sr" for="set-filter-btn">Filtrar coleção</label>
+      <div class="set-pick" id="set-filter">
+        <button class="set-pick-btn" id="set-filter-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <img alt="" hidden />
+          <span>Todas as coleções</span>
+        </button>
+        <div class="set-pick-list" role="listbox" hidden></div>
+      </div>
     </form>
     <div class="top-actions">
       <button class="menu-toggle" id="menu-btn" type="button" aria-expanded="false" aria-controls="nav">
@@ -77,6 +81,6 @@
   </div>
   <script src="catalog.js?v=4"></script>
   <script src="supabase.js"></script>
-  <script src="app.js?v=33"></script>
+  <script src="app.js?v=34"></script>
 </body>
 </html>
