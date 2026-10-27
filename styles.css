@@ -502,6 +502,7 @@ button, input, select { font: inherit; color: inherit; }
 .tags .flag svg,
 .specs .flag svg { width: 22px; height: 15px; display: block; border-radius: 2px; }
 .price { margin: 0.35rem 0 0; color: var(--red); font-weight: 750; letter-spacing: -0.02em; }
+.price s { color: var(--muted); font-weight: 550; font-size: 0.78em; margin-right: 0.3rem; }
 .buy { margin: 0.65rem 0.7rem 0.75rem; }
 
 .detail { display: grid; grid-template-columns: 280px 1fr; gap: 1.1rem; align-items: start; }

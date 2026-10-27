@@ -25,6 +25,22 @@
       .replace(/"/g, "&quot;");
   }
 
+  function loggedIn() {
+    return Boolean(sessionStorage.getItem("amd.session"));
+  }
+
+  function payPrice(value) {
+    const full = Number(value) || 0;
+    if (!loggedIn()) return full;
+    return Math.round(full * 95) / 100;
+  }
+
+  function priceHtml(value) {
+    const full = Number(value) || 0;
+    if (!loggedIn()) return esc(money(full));
+    return `<s>${esc(money(full))}</s> ${esc(money(payPrice(full)))}`;
+  }
+
   function money(value) {
     return Number(value).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   }
@@ -49,7 +65,7 @@
       "Olá! Quero reservar:",
       `${product.name}${code}`,
       `${set.name} · ${product.lang} · ${product.condition} · ${product.finish}`,
-      money(product.price),
+      money(payPrice(product.price)),
       "Ainda está disponível?",
     ].join("\n");
   }
@@ -95,7 +111,7 @@
             <h3>${esc(product.name)}</h3>
             <p class="setline">${esc(set.name)}${number}</p>
             <p class="tags"><span>${esc(product.condition)}</span>${flagOf(product.lang)}<span>${esc(product.finish)}</span><span>${product.qty} un.</span></p>
-            <p class="price">${esc(money(product.price))}</p>
+            <p class="price">${priceHtml(product.price)}</p>
           </div>
         </a>
         <a class="buy" href="${esc(waLink(product))}" target="_blank" rel="noopener noreferrer">
@@ -268,7 +284,7 @@
           <div>
             <p class="kicker">${esc(set.name)}${product.number ? " · " + esc(numberLabel(product.number)) : ""}</p>
             <h1>${esc(product.name)}</h1>
-            <p class="price">${esc(money(product.price))}</p>
+            <p class="price">${priceHtml(product.price)}</p>
             <table class="specs">
               <tr><th>Tipo</th><td>${product.kind === "sealed" ? "Lacrado" : "Carta avulsa"}</td></tr>
               <tr><th>Coleção</th><td>${esc(set.name)} (${esc(set.code)})</td></tr>
@@ -414,8 +430,6 @@
     };
     const password = String(form.get("password") || "");
     const msg = document.getElementById("signup-msg");
-    localStorage.setItem("amd.account", JSON.stringify(profile));
-    sessionStorage.setItem("amd.session", profile.email);
     try {
       const sb = await window.AMD_SB.client();
       if (sb) {
@@ -430,7 +444,10 @@
       console.warn(error);
     }
     msg.textContent = "Conta criada.";
+    localStorage.setItem("amd.account", JSON.stringify(profile));
+    sessionStorage.setItem("amd.session", profile.email);
     paintAccount();
+    location.hash = "#/";
   }
 
   async function onSignin(event) {
@@ -454,8 +471,8 @@
       return;
     }
     sessionStorage.setItem("amd.session", email);
-    msg.textContent = "Você entrou.";
     paintAccount();
+    location.hash = "#/";
   }
 
   function paintAccount() {
