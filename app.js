@@ -334,13 +334,14 @@
       document.title = "Coleções · A.M.D TCG";
       const rows = shop.sets.map((set) => {
         const count = shop.products.filter((product) => product.set === set.id).length;
-        return `<a class="set-link" href="#/set/${esc(set.id)}"><strong>${esc(set.name)}</strong><span>${esc(set.code)} · ${count}</span></a>`;
+        return `<a class="set-link" href="#/set/${esc(set.id)}" data-find="${esc(`${set.name} ${set.en || ""} ${set.code}`)}"><strong>${esc(set.name)}</strong><span>${esc(set.code)} · ${count}</span></a>`;
       }).join("");
       main.innerHTML = `<h1 class="page-title">Coleções</h1><p class="lede">Escolha a coleção.</p><input id="set-find" class="set-find" type="search" placeholder="Buscar coleção" /><div class="sets" id="set-list">${rows}</div>`;
       document.getElementById("set-find").addEventListener("input", (event) => {
-        const query = event.target.value.trim().toLowerCase();
+        const query = event.target.value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
         document.querySelectorAll("#set-list .set-link").forEach((link) => {
-          link.hidden = query && !link.textContent.toLowerCase().includes(query);
+          const hay = (link.dataset.find || link.textContent).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+          link.hidden = query && !query.split(/\s+/).every((word) => hay.includes(word));
         });
       });
       return;

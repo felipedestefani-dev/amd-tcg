@@ -69,10 +69,31 @@
     img.onerror = symbol;
   }
 
+  function fold(value) {
+    return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  }
+
+  function edits(a, b) {
+    if (Math.abs(a.length - b.length) > 2) return 9;
+    const rows = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+    for (let j = 1; j <= b.length; j += 1) rows[0][j] = j;
+    for (let i = 1; i <= a.length; i += 1) {
+      for (let j = 1; j <= b.length; j += 1) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        rows[i][j] = Math.min(rows[i - 1][j] + 1, rows[i][j - 1] + 1, rows[i - 1][j - 1] + cost);
+      }
+    }
+    return rows[a.length][b.length];
+  }
+
   function setHits(query) {
-    const text = query.trim().toLowerCase();
-    if (!text) return [];
-    return shop.sets.filter((set) => `${set.name} ${set.code} ${set.id}`.toLowerCase().includes(text)).slice(0, 8);
+    const words = fold(query).split(/\s+/).filter((word) => word.length > 1);
+    if (!words.length) return [];
+    return shop.sets.filter((set) => {
+      const parts = fold(`${set.name} ${set.en || ""} ${set.code} ${set.id}`).split(/\s+/).filter(Boolean);
+      const blob = parts.join(" ");
+      return words.every((word) => blob.includes(word) || parts.some((part) => edits(part, word) <= (word.length >= 6 ? 2 : 1)));
+    }).slice(0, 8);
   }
 
   function setHitHtml(set) {
