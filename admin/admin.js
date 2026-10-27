@@ -23,6 +23,9 @@
   let visitTo = "";
   let visits = [];
   let visitsError = "";
+  let sealedItems = [];
+  let sealedType = "Todos";
+  let sealedTimer = 0;
 
   const RARITY = {
     Common: "Comum",
@@ -78,18 +81,26 @@
     const file = String(p.number || "").split("/")[0];
     const auto = file && p.set_id ? `https://images.pokemontcg.io/${esc(p.set_id)}/${esc(file)}.png` : "";
     const preview = draftImage || auto;
+    const sealed = p.kind === "sealed";
     return `
       <form id="editor" class="fields">
-        <label>Nome<input id="poke-name" type="search" placeholder="Ex. Charizard" autocomplete="off" /></label>
-        <div id="poke-names" class="name-picks"></div>
-        <label>Número<input id="poke-number" type="search" placeholder="Digite o número para filtrar as fotos" autocomplete="off" /></label>
-        <div id="card-hits" class="print-grid"></div>
+        <div id="single-search" ${sealed ? "hidden" : ""}>
+          <label>Nome<input id="poke-name" type="search" placeholder="Ex. Charizard" autocomplete="off" /></label>
+          <div id="poke-names" class="name-picks"></div>
+          <label>Número<input id="poke-number" type="search" placeholder="Número da carta" autocomplete="off" /></label>
+          <div id="card-hits" class="print-grid"></div>
+        </div>
+        <div id="sealed-search" ${sealed ? "" : "hidden"}>
+          <label>Lacrado<input id="sealed-q" type="search" placeholder="Coleção, ex. Evoluções Prismáticas" autocomplete="off" /></label>
+          <div id="sealed-types" class="name-picks"></div>
+          <div id="sealed-hits" class="print-grid"></div>
+        </div>
         <div class="photo-box">
           ${preview ? `<img id="card-preview" class="card-preview" src="${esc(preview)}" alt="" />` : `<div id="card-preview" class="card-preview empty">Sem foto</div>`}
           <div class="photo-actions">
             <label class="ghost photo-btn"><img src="/assets/icons/search.png" alt="" />Adicionar foto<input id="photo-file" type="file" accept="image/*" hidden /></label>
             <button class="ghost" type="button" id="photo-clear">Tirar foto</button>
-            <p>A foto enviada aparece na loja. Sem foto, a carta usa a arte do número.</p>
+            <p>Foto que aparece na loja.</p>
           </div>
         </div>
         <div class="row-2">${field("id", "Código", p.id)}${field("name", "Nome", p.name)}</div>
@@ -173,8 +184,10 @@
             ${item("sets", "Coleções", "/assets/icons/sets.png")}
             ${item("visits", "Visitas", "/assets/icons/search.png")}
           </nav>
-          <button class="ghost" type="button" id="sair">Sair</button>
-          <a class="desk-store" href="/"><img src="/assets/icons/home.png" alt="" />Ver loja</a>
+          <div class="desk-tools">
+            <button class="ghost" type="button" id="sair">Sair</button>
+            <a class="desk-store" href="/"><img src="/assets/icons/home.png" alt="" />Ver loja</a>
+          </div>
         </aside>
         <section class="desk-main">
           <header class="desk-head">
@@ -599,6 +612,22 @@ create policy "ler visitas" on public.visits for select to authenticated using (
       searchTimer = setTimeout(() => searchPokemonNames(nameInput.value), 350);
     });
     document.getElementById("poke-number").addEventListener("input", renderPrintings);
+    const kindSelect = document.querySelector("#editor select[name=kind]");
+    const syncKind = () => {
+      const sealed = kindSelect.value === "sealed";
+      document.getElementById("single-search").hidden = sealed;
+      document.getElementById("sealed-search").hidden = !sealed;
+      if (!sealed) return;
+      const input = document.getElementById("sealed-q");
+      if (!input.value) input.value = setName(document.getElementById("editor").elements.set_id.value);
+      searchSealedProducts(input.value);
+    };
+    kindSelect.addEventListener("change", syncKind);
+    document.getElementById("sealed-q").addEventListener("input", () => {
+      clearTimeout(sealedTimer);
+      sealedTimer = setTimeout(() => searchSealedProducts(document.getElementById("sealed-q").value), 350);
+    });
+    if (kindSelect.value === "sealed") syncKind();
   }
 
   function parseCardSearch(text) {
@@ -721,6 +750,66 @@ create policy "ler visitas" on public.visits for select to authenticated using (
     box.querySelectorAll("[data-print]").forEach((button) => {
       button.onclick = () => applyCard(list[Number(button.dataset.print)]);
     });
+  }
+
+  async function searchSealedProducts(text) {
+    const box = document.getElementById("sealed-hits");
+    const types = document.getElementById("sealed-types");
+    if (!box || !types) return;
+    const query = text.trim();
+    if (query.length < 2) { box.innerHTML = ""; types.innerHTML = ""; sealedItems = []; return; }
+    box.innerHTML = `<p class="msg">Buscando lacrados…</p>`;
+    try {
+      const response = await fetch("/api/sealed?q=" + encodeURIComponent(query));
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Não foi possível consultar os lacrados.");
+      sealedItems = payload.items || [];
+      if (!sealedItems.length) { box.innerHTML = `<p class="msg">Nenhum lacrado nessa coleção.</p>`; types.innerHTML = ""; return; }
+      const labels = [...new Set(sealedItems.map((item) => item.label))];
+      const order = ["BB", "Mini BB", "ETB", "UPC", "Bundle", "Box", "Mini Tin", "Coleção"];
+      labels.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+      if (!labels.includes(sealedType)) sealedType = "Todos";
+      types.innerHTML = ["Todos", ...labels].map((label) => `<button type="button" data-seal="${esc(label)}" class="${label === sealedType ? "is-on" : ""}">${esc(label)}</button>`).join("");
+      types.querySelectorAll("[data-seal]").forEach((button) => {
+        button.onclick = () => {
+          sealedType = button.dataset.seal;
+          types.querySelectorAll("[data-seal]").forEach((item) => item.classList.toggle("is-on", item.dataset.seal === sealedType));
+          renderSealed();
+        };
+      });
+      renderSealed();
+    } catch (error) {
+      box.innerHTML = `<p class="msg">${esc(error.message)}</p>`;
+    }
+  }
+
+  function renderSealed() {
+    const box = document.getElementById("sealed-hits");
+    if (!box) return;
+    const list = sealedItems.filter((item) => sealedType === "Todos" || item.label === sealedType);
+    box.innerHTML = list.map((item, index) => `
+      <button type="button" data-seal-item="${index}">
+        <img src="${esc(item.image)}" alt="" />
+        <strong>${esc(item.label)}</strong>
+        <span>${esc(item.name)}</span>
+      </button>`).join("");
+    box.querySelectorAll("[data-seal-item]").forEach((button) => {
+      button.onclick = () => applySealed(list[Number(button.dataset.sealItem)]);
+    });
+  }
+
+  function applySealed(item) {
+    const form = document.getElementById("editor");
+    form.elements.kind.value = "sealed";
+    form.elements.name.value = item.name;
+    if (!form.elements.id.value) form.elements.id.value = "sealed-" + item.productId;
+    form.elements.number.value = "";
+    form.elements.rarity.value = item.label;
+    if (!form.elements.finish.value || form.elements.finish.value === "Normal" || form.elements.finish.value === "Foil") {
+      form.elements.finish.value = "Lacrado";
+    }
+    draftImage = item.image;
+    showPreview(item.image);
   }
 
   async function lookupCard(text) {

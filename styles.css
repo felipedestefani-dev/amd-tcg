@@ -610,6 +610,7 @@ button, input, select { font: inherit; color: inherit; }
   cursor: pointer;
 }
 .desk-nav button.is-on { background: #f3f4f6; }
+.desk-tools { display: grid; gap: 0.2rem; margin-top: auto; }
 .desk-nav button img, .photo-btn img { width: 18px; height: 18px; object-fit: contain; }
 .desk-nav button { gap: 0.55rem; }
 .desk-side .ghost { color: var(--muted); }
@@ -762,10 +763,38 @@ button, input, select { font: inherit; color: inherit; }
 .danger { color: var(--red); }
 @media (max-width: 860px) {
   .desk { grid-template-columns: 1fr; }
-  .desk-side { position: static; height: auto; }
-  .desk-nav { display: flex; overflow: auto; }
-  .desk-nav button { width: auto; white-space: nowrap; }
-  .desk-store { margin-top: 0.6rem; }
+  .desk-side {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    height: auto;
+    gap: 0.4rem;
+    padding: 0.45rem 0.65rem 0.5rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .desk-side .brand img { width: 46px; height: auto; }
+  .desk-side .brand span { display: none; }
+  .desk-nav { display: flex; overflow: auto; margin-top: 0; gap: 0.2rem; }
+  .desk-nav button { width: auto; white-space: nowrap; min-height: 36px; padding: 0 0.6rem; font-size: 0.82rem; }
+  .desk-tools { display: flex; margin-top: 0; gap: 0.35rem; }
+  .desk-side .ghost, .desk-store { width: auto; flex: 1; min-height: 36px; margin-top: 0; justify-content: center; }
+  .desk-main { padding: 0.85rem 0.7rem 2.2rem; }
+  .desk-head { margin-bottom: 0.7rem; }
+  .desk-head h1 { font-size: 1.28rem; }
   .stats { grid-template-columns: 1fr 1fr; }
+  .stat { padding: 0.7rem 0.75rem; }
+  .stat b { font-size: 1.05rem; overflow-wrap: anywhere; }
+  .panel { padding: 0.85rem 0.75rem; }
+  .toolbar { display: grid; }
+  .toolbar input, .toolbar select { width: 100%; min-width: 0; }
   .row-2 { grid-template-columns: 1fr; }
+  .prow { flex-wrap: wrap; align-items: center; gap: 0.45rem; padding: 0.6rem; }
+  .prow-open { flex: 1 1 calc(100% - 6.2rem); }
+  .prow > strong { margin-left: auto; }
+  .row-delete { flex: 1 1 100%; }
+  .photo-box { flex-direction: column; align-items: flex-start; }
+  .actions .solid, .actions .ghost { flex: 1 1 calc(50% - 0.45rem); justify-content: center; }
+  .print-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .split { grid-template-columns: 1fr; }
 }

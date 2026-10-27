@@ -2,6 +2,7 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { searchSealed } from "./lib/sealed.mjs";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const port = 5173;
@@ -31,6 +32,18 @@ function sendFile(res, file) {
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://localhost");
+  if (url.pathname === "/api/sealed") {
+    try {
+      const items = await searchSealed(url.searchParams.get("q") || "");
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ items }));
+    } catch {
+      res.writeHead(502, { "content-type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ error: "Falha ao consultar os lacrados." }));
+    }
+    return;
+  }
+
   if (url.pathname === "/api/tcg") {
     const q = url.searchParams.get("q") || "";
     const pageSize = Math.min(Math.max(Number(url.searchParams.get("pageSize")) || 12, 1), 200);
