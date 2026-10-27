@@ -513,9 +513,11 @@
     if (!bar) return;
     const choice = localStorage.getItem("amd.cookies");
     bar.hidden = Boolean(choice);
+    document.body.classList.toggle("has-cookie", !choice);
     const pick = (value) => {
       localStorage.setItem("amd.cookies", value);
       bar.hidden = true;
+      document.body.classList.remove("has-cookie");
       if (value === "all") trackVisit();
     };
     document.getElementById("cookie-all").onclick = () => pick("all");
@@ -581,9 +583,11 @@
     const user = account();
     const link = document.getElementById("entrar");
     const signup = document.getElementById("criar");
+    const leave = document.getElementById("sair");
     const menuSignup = document.querySelector('#nav a[href="#/cadastro"]');
     const on = loggedIn();
     if (signup) signup.hidden = on;
+    if (leave) leave.hidden = !on;
     if (menuSignup) menuSignup.hidden = on;
     if (user && on) {
       link.textContent = user.name.split(" ")[0];
@@ -592,6 +596,32 @@
       link.textContent = "Entrar";
       link.href = "#/entrar";
     }
+  }
+
+  async function logout() {
+    sessionStorage.removeItem("amd.session");
+    try {
+      const sb = await window.AMD_SB.client();
+      if (sb) await sb.auth.signOut();
+    } catch { /* a tela volta mesmo se a saída remota falhar */ }
+    paintAccount();
+    if ((location.hash || "#/") !== "#/") location.hash = "#/";
+    else render();
+  }
+
+  async function syncAccount() {
+    try {
+      const sb = await window.AMD_SB.client();
+      if (!sb) return;
+      const { data, error } = await sb.auth.getSession();
+      if (error || !data.session) {
+        if (!error) sessionStorage.removeItem("amd.session");
+        return;
+      }
+      const email = data.session.user.email || "";
+      const saved = sessionStorage.getItem("amd.session");
+      if (saved && email && saved !== email) sessionStorage.removeItem("amd.session");
+    } catch { /* sem rede, mantém a sessão que já está no aparelho */ }
   }
 
   function fillSets() {
@@ -704,10 +734,11 @@
     });
   });
 
-  loadRemote().finally(() => {
+  loadRemote().finally(async () => {
+    await syncAccount();
     fillSets();
-    paintAccount();
     bindCookies();
+    document.getElementById("sair").onclick = logout;
     render();
   });
 })();

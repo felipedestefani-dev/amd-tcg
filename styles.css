@@ -173,7 +173,7 @@ button, input, select { font: inherit; color: inherit; }
   left: 0;
   bottom: 0;
   width: min(300px, 86vw);
-  z-index: 40;
+  z-index: 50;
   margin: 0;
   padding: 0.75rem;
   background: #fff;
@@ -183,7 +183,7 @@ button, input, select { font: inherit; color: inherit; }
 .backdrop {
   position: fixed;
   inset: var(--head, 88px) 0 0 0;
-  z-index: 30;
+  z-index: 45;
   border: 0;
   background: rgba(17, 17, 17, 0.45);
   cursor: pointer;
@@ -202,7 +202,8 @@ button, input, select { font: inherit; color: inherit; }
   font-size: 0.95rem;
 }
 .menu a[hidden],
-#criar[hidden] { display: none; }
+#criar[hidden],
+#sair[hidden] { display: none; }
 .menu a[aria-current="page"] { background: #fff; color: var(--ink); }
 .menu a:hover { background: #fff; }
 
@@ -565,7 +566,7 @@ button, input, select { font: inherit; color: inherit; }
 .legal li { margin: 0.28rem 0; }
 .cookie {
   position: fixed;
-  z-index: 40;
+  z-index: 35;
   left: 0.8rem;
   right: 0.8rem;
   bottom: 0.8rem;
@@ -579,7 +580,7 @@ button, input, select { font: inherit; color: inherit; }
   border-radius: 16px;
   box-shadow: 0 12px 40px rgba(17, 17, 17, 0.12);
 }
-.cookie[hidden] { display: none; }
+body.has-cookie { padding-bottom: 7.2rem; }
 .cookie p { flex: 1 1 240px; margin: 0; color: var(--muted); font-size: 0.9rem; }
 .cookie > a { color: var(--red); font-weight: 700; text-decoration: none; }
 .cookie-actions { display: flex; gap: 0.45rem; }
