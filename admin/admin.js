@@ -51,6 +51,34 @@
     return Number(value).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   }
 
+  function setLogo(id) {
+    return `https://images.pokemontcg.io/${id}/logo.png`;
+  }
+
+  function setHits(query) {
+    const text = query.trim().toLowerCase();
+    if (!text) return [];
+    return shop.sets.filter((set) => `${set.name} ${set.code} ${set.id}`.toLowerCase().includes(text)).slice(0, 8);
+  }
+
+  function setHitHtml(set) {
+    return `<button class="set-hit" type="button" data-set="${esc(set.id)}"><img src="${esc(setLogo(set.id))}" alt="" /><span><strong>${esc(set.name)}</strong><small>${esc(set.code)}</small></span></button>`;
+  }
+
+  function bindSetSearch(input, box, onPick) {
+    const paint = () => {
+      const found = setHits(input.value);
+      if (!input.value.trim()) { box.hidden = true; box.innerHTML = ""; return; }
+      box.hidden = false;
+      box.innerHTML = found.length ? found.map(setHitHtml).join("") : `<p class="set-empty">Nenhuma coleção.</p>`;
+      box.querySelectorAll("img").forEach((img) => { img.onerror = () => img.remove(); });
+      box.querySelectorAll("[data-set]").forEach((button) => {
+        button.onclick = () => onPick(shop.sets.find((set) => set.id === button.dataset.set));
+      });
+    };
+    input.addEventListener("input", paint);
+  }
+
   function field(name, label, value, type) {
     return `<label>${esc(label)}<input name="${esc(name)}" type="${type || "text"}" value="${esc(value)}" /></label>`;
   }
@@ -78,10 +106,10 @@
   function productForm(product, kind) {
     const mode = product?.kind || kind || "single";
     const sealed = mode === "sealed";
-    const sets = shop.sets.map((set) => `<option value="${esc(set.id)}" ${product && product.set_id === set.id ? "selected" : ""}>${esc(set.name)}</option>`).join("");
-    const p = product || { id: "", kind: mode, name: "", set_id: shop.sets[0]?.id || "", number: "", rarity: "", condition: sealed ? "" : "NM", lang: sealed ? "" : "PT", finish: sealed ? "Lacrado" : "Normal", qty: 1, price: "" };
+    const p = product || { id: "", kind: mode, name: "", set_id: "", number: "", rarity: "", condition: sealed ? "" : "NM", lang: sealed ? "" : "PT", finish: sealed ? "Lacrado" : "Normal", qty: 1, price: "" };
     const file = String(p.number || "").split("/")[0];
     const auto = !sealed && file && p.set_id ? `https://images.pokemontcg.io/${esc(p.set_id)}/${esc(file)}.png` : "";
+    const chosen = product && shop.sets.find((set) => set.id === product.set_id);
     const preview = draftImage || auto;
     const search = sealed ? `
         <label>Produto<input id="sealed-q" type="search" placeholder="Coleção, ex. Evoluções Prismáticas" autocomplete="off" /></label>
@@ -116,7 +144,19 @@
           </div>
         </div>
         <div class="row-2">${field("id", "Código", p.id)}${field("name", "Nome", p.name)}</div>
-        <label>Coleção<select name="set_id">${sets}</select></label>
+        <div class="set-field">
+          <span>Coleção</span>
+          <div class="set-pick">
+            <input type="hidden" name="set_id" value="${esc(chosen ? chosen.id : "")}" />
+            <div class="set-chosen" id="set-chosen" ${chosen ? "" : "hidden"}>
+              <img src="${chosen ? esc(setLogo(chosen.id)) : ""}" alt="" />
+              <strong>${chosen ? esc(chosen.name) : ""}</strong>
+              <button class="ghost" type="button" id="set-clear">Trocar</button>
+            </div>
+            <input id="set-pick-q" class="set-find" type="search" placeholder="Buscar coleção" autocomplete="off" ${chosen ? "hidden" : ""} />
+            <div id="set-pick-results" class="set-results" hidden></div>
+          </div>
+        </div>
         ${specifics}
         <div class="actions">
           <button class="solid" type="submit">${product ? "Salvar" : "Adicionar"}</button>
@@ -388,16 +428,11 @@ create policy "ler visitas" on public.visits for select to authenticated using (
   }
 
   function setsView() {
-    const rows = shop.sets.map((set) => {
-      const count = catalog.filter((product) => product.set_id === set.id).length;
-      return `
-        <button class="prow" type="button" data-set="${esc(set.id)}">
-          <span><strong>${esc(set.name)}</strong><span>${esc(set.code)} · ${count} itens</span></span>
-          <strong>${esc(set.id)}</strong>
-        </button>`;
-    }).join("");
-    return shell("Coleções", "Todas as coleções, para escolher na carta ou no produto.", `
-      <input id="set-q" class="set-find" type="search" placeholder="Buscar coleção" />
+    return shell("Coleções", "Escreva o nome para ver a coleção.", `
+      <div class="set-pick">
+        <input id="set-q" class="set-find" type="search" placeholder="Buscar coleção" autocomplete="off" />
+        <div id="set-results" class="set-results" hidden></div>
+      </div>
       <section class="panel">
         <h2>Nova coleção</h2>
         <form id="set-form" class="fields">
@@ -405,8 +440,7 @@ create policy "ler visitas" on public.visits for select to authenticated using (
           ${field("name", "Nome", "")}
           <div class="actions"><button class="solid" type="submit">Adicionar coleção</button></div>
         </form>
-      </section>
-      <div class="plist" id="set-list">${rows || `<p class="empty">Nenhuma coleção.</p>`}</div>`);
+      </section>`);
   }
 
   function bindDesk() {
@@ -425,12 +459,8 @@ create policy "ler visitas" on public.visits for select to authenticated using (
     if (addCard) addCard.onclick = () => openNew("single");
     if (addProduct) addProduct.onclick = () => openNew("sealed");
     const setQuery = document.getElementById("set-q");
-    if (setQuery) setQuery.oninput = () => {
-      const query = setQuery.value.trim().toLowerCase();
-      document.querySelectorAll("#set-list [data-set]").forEach((button) => {
-        button.hidden = query && !button.textContent.toLowerCase().includes(query);
-      });
-    };
+    const setResults = document.getElementById("set-results");
+    if (setQuery && setResults) bindSetSearch(setQuery, setResults, (set) => { if (set) editSet(set.id); });
     const seedButton = document.getElementById("seed");
     if (seedButton) seedButton.onclick = seed;
     const list = document.getElementById("plist");
@@ -479,11 +509,6 @@ create policy "ler visitas" on public.visits for select to authenticated using (
     if (kind) kind.onchange = () => { stockKind = kind.value; document.getElementById("plist").innerHTML = productRows(stockList()); };
     const setForm = document.getElementById("set-form");
     if (setForm) setForm.addEventListener("submit", saveSet);
-    const setList = document.getElementById("set-list");
-    if (setList) setList.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-set]");
-      if (button) editSet(button.dataset.set);
-    });
   }
 
   async function paintDesk() {
@@ -629,6 +654,28 @@ create policy "ler visitas" on public.visits for select to authenticated using (
       showPreview(mode === "sealed" ? "" : autoArt());
     };
     document.getElementById("editor").addEventListener("submit", saveProduct);
+    const pick = document.getElementById("set-pick-q");
+    const pickResults = document.getElementById("set-pick-results");
+    const chosenBox = document.getElementById("set-chosen");
+    const showChosen = (set) => {
+      document.querySelector("#editor [name=set_id]").value = set.id;
+      chosenBox.hidden = false;
+      const logo = chosenBox.querySelector("img");
+      logo.hidden = false;
+      logo.src = setLogo(set.id);
+      logo.onerror = () => { logo.hidden = true; };
+      chosenBox.querySelector("strong").textContent = set.name;
+      pick.value = "";
+      pick.hidden = true;
+      pickResults.hidden = true;
+    };
+    bindSetSearch(pick, pickResults, (set) => { if (set) showChosen(set); });
+    document.getElementById("set-clear").onclick = () => {
+      document.querySelector("#editor [name=set_id]").value = "";
+      chosenBox.hidden = true;
+      pick.hidden = false;
+      pick.focus();
+    };
     if (mode === "sealed") {
       const input = document.getElementById("sealed-q");
       input.addEventListener("input", () => {
@@ -886,12 +933,21 @@ create policy "ler visitas" on public.visits for select to authenticated using (
       name: card.set.name,
       code: card.set.ptcgoCode || card.set.id.toUpperCase(),
     };
-    if (!known) {
-      shop.sets.push(pickedSet);
-      const select = form.elements.set_id;
-      select.insertAdjacentHTML("beforeend", `<option value="${esc(pickedSet.id)}">${esc(pickedSet.name)}</option>`);
-    }
+    if (!known) shop.sets.push(pickedSet);
     form.elements.set_id.value = pickedSet.id;
+    const chosenBox = document.getElementById("set-chosen");
+    const pick = document.getElementById("set-pick-q");
+    if (chosenBox && pick) {
+      chosenBox.hidden = false;
+      const logo = chosenBox.querySelector("img");
+      logo.hidden = false;
+      logo.src = setLogo(pickedSet.id);
+      logo.onerror = () => { logo.hidden = true; };
+      chosenBox.querySelector("strong").textContent = pickedSet.name;
+      pick.value = "";
+      pick.hidden = true;
+      document.getElementById("set-pick-results").hidden = true;
+    }
     form.elements.id.value = card.id;
     form.elements.name.value = card.name;
     form.elements.number.value = ligaNumber(card);
@@ -927,7 +983,7 @@ create policy "ler visitas" on public.visits for select to authenticated using (
       image: draftImage || "",
     };
     const msg = document.getElementById("desk-msg");
-    if (!row.id || !row.name) { msg.textContent = "Código e nome são obrigatórios."; return; }
+    if (!row.id || !row.name || !row.set_id) { msg.textContent = "Código, nome e coleção são obrigatórios."; return; }
     const setRow = shop.sets.find((set) => set.id === row.set_id);
     if (setRow) {
       const setSave = await sb.from("sets").upsert({
