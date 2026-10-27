@@ -147,10 +147,14 @@
           <a href="#/cadastro" aria-label="Clientes cadastrados ganham 5% de desconto">
             <img src="assets/banner-desconto.jpg?v=4" alt="" />
           </a>
+          <a href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer" aria-label="AMD na Jamble, confira já">
+            <img src="assets/banner-jamble.jpg?v=1" alt="" />
+          </a>
         </div>
         <div class="hero-dots">
           <button type="button" aria-label="Primeiro banner"></button>
           <button type="button" aria-label="Segundo banner"></button>
+          <button type="button" aria-label="Terceiro banner"></button>
         </div>
       </div>`;
   }
