@@ -125,11 +125,17 @@
 
   function banner() {
     return `
-      <div class="hero-rotator">
-        <img src="assets/banner.jpg?v=4" alt="Um novo site para os amantes de Pokémon" />
-        <a href="#/cadastro" aria-label="Clientes cadastrados ganham 5% de desconto">
-          <img src="assets/banner-desconto.jpg?v=4" alt="" />
-        </a>
+      <div class="hero">
+        <div class="hero-rotator">
+          <img src="assets/banner.jpg?v=4" alt="Um novo site para os amantes de Pokémon" />
+          <a href="#/cadastro" aria-label="Clientes cadastrados ganham 5% de desconto">
+            <img src="assets/banner-desconto.jpg?v=4" alt="" />
+          </a>
+        </div>
+        <div class="hero-dots">
+          <button type="button" aria-label="Primeiro banner"></button>
+          <button type="button" aria-label="Segundo banner"></button>
+        </div>
       </div>`;
   }
 
@@ -184,13 +190,28 @@
     const box = document.querySelector(".hero-rotator");
     if (!box) return;
     const slides = [...box.children];
+    const dots = [...document.querySelectorAll(".hero-dots button")];
     let index = 0;
-    const show = () => slides.forEach((slide, i) => slide.classList.toggle("is-on", i === index));
+    const show = () => {
+      slides.forEach((slide, i) => slide.classList.toggle("is-on", i === index));
+      dots.forEach((dot, i) => dot.classList.toggle("is-on", i === index));
+    };
+    const start = () => {
+      clearInterval(heroTimer);
+      heroTimer = setInterval(() => {
+        index = (index + 1) % slides.length;
+        show();
+      }, 5000);
+    };
     show();
-    heroTimer = setInterval(() => {
-      index = (index + 1) % slides.length;
-      show();
-    }, 5000);
+    start();
+    dots.forEach((dot, i) => {
+      dot.onclick = () => {
+        index = i;
+        show();
+        start();
+      };
+    });
   }
 
   function render() {
