@@ -152,13 +152,13 @@
     return `
       <div class="hero">
         <div class="hero-rotator">
+          <a href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer" aria-label="AMD na Jamble, confira já">
+            <img src="assets/banner-jamble.jpg?v=1" alt="" />
+          </a>
           <img src="assets/banner.jpg?v=8" alt="Um novo site para os amantes de Pokémon" />
-        <a href="#/cadastro" aria-label="Clientes cadastrados ganham 5% de desconto">
-          <img src="assets/banner-desconto.jpg?v=8" alt="" />
-        </a>
-        <a href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer" aria-label="AMD na Jamble, confira já">
-          <img src="assets/banner-jamble.jpg?v=1" alt="" />
-        </a>
+          <a href="#/cadastro" aria-label="Clientes cadastrados ganham 5% de desconto">
+            <img src="assets/banner-desconto.jpg?v=8" alt="" />
+          </a>
         </div>
         <div class="hero-dots">
           <button type="button" aria-label="Primeiro banner"></button>
