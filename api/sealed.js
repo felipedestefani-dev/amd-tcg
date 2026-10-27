@@ -16,9 +16,12 @@ const ALIASES = [
   ["celebracoes", "30th celebration"],
   ["celebracao", "30th celebration"],
   ["30 anos", "30th celebration"],
+  ["trick and trade", "trick or trade"],
+  ["trick or trade", "trick or trade"],
+  ["doces ou travessuras", "trick or trade"],
 ];
 
-const LABEL_ORDER = ["BB", "Mini BB", "ETB", "UPC", "Bundle", "Box", "Mini Tin", "Coleção"];
+const LABEL_ORDER = ["BB", "Mini BB", "Booster", "ETB", "UPC", "Bundle", "Box", "Mini Tin", "Coleção"];
 
 let groupsCache = null;
 const productsCache = new Map();
@@ -40,7 +43,9 @@ function labelOf(name) {
   if (/booster box/.test(text)) return "BB";
   if (/elite trainer box/.test(text)) return "ETB";
   if (/ultra[- ]premium collection/.test(text)) return "UPC";
+  if (/mini booster pack|\bbooster pack\b|sleeved booster/.test(text)) return "Booster";
   if (/booster bundle/.test(text)) return "Bundle";
+  if (/\bbooster\b/.test(text)) return "Booster";
   if (/mini tin/.test(text)) return "Mini Tin";
   if (/premium collection|super-premium collection|poster collection/.test(text)) return "Coleção";
   if (/\bbox\b/.test(text) && !/booster pack/.test(text)) return "Box";
@@ -54,6 +59,18 @@ function needles(query) {
     if (base.includes(from) || (base.length >= 3 && from.includes(base))) extra.push(to);
   }
   return [...new Set([base, ...extra].filter((item) => item.length >= 2))];
+}
+
+function groupYear(group) {
+  const match = norm(group.name).match(/\b(20\d{2})\b/);
+  if (match) return match[1];
+  if (norm(group.abbreviation) === "ttbb") return "2022";
+  return "";
+}
+
+function queryYear(query) {
+  const match = norm(query).match(/\b(20\d{2})\b/);
+  return match ? match[1] : "";
 }
 
 function score(group, needle) {
@@ -94,11 +111,16 @@ export async function searchSealed(query) {
   const terms = needles(query);
   if (!terms.length) return [];
   const list = await groups();
-  const ranked = list
+  let ranked = list
     .map((group) => ({ group, score: Math.max(...terms.map((term) => score(group, term))) }))
     .filter((item) => item.score >= 40)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 2);
+    .sort((a, b) => b.score - a.score);
+  const wanted = queryYear(query);
+  if (wanted) {
+    const dated = ranked.filter((item) => groupYear(item.group) === wanted);
+    if (dated.length) ranked = dated;
+  }
+  ranked = ranked.slice(0, 4);
   const items = [];
   for (const { group } of ranked) {
     const rows = await products(group.groupId);
@@ -115,7 +137,7 @@ export async function searchSealed(query) {
     }
   }
   items.sort((a, b) => LABEL_ORDER.indexOf(a.label) - LABEL_ORDER.indexOf(b.label) || a.name.localeCompare(b.name));
-  return items.slice(0, 48);
+  return items.slice(0, 72);
 }
 
 export default async function handler(req, res) {

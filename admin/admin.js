@@ -1011,7 +1011,7 @@ create policy "ler clientes" on public.customers for select to authenticated usi
       sealedItems = payload.items || [];
       if (!sealedItems.length) { box.innerHTML = `<p class="msg">Nenhum lacrado nessa coleção.</p>`; types.innerHTML = ""; return; }
       const labels = [...new Set(sealedItems.map((item) => item.label))];
-      const order = ["BB", "Mini BB", "ETB", "UPC", "Bundle", "Box", "Mini Tin", "Coleção"];
+      const order = ["BB", "Mini BB", "Booster", "ETB", "UPC", "Bundle", "Box", "Mini Tin", "Coleção"];
       labels.sort((a, b) => order.indexOf(a) - order.indexOf(b));
       if (!labels.includes(sealedType)) sealedType = "Todos";
       types.innerHTML = ["Todos", ...labels].map((label) => `<button type="button" data-seal="${esc(label)}" class="${label === sealedType ? "is-on" : ""}">${esc(label)}</button>`).join("");

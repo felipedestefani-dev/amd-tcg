@@ -868,17 +868,22 @@ body.has-cookie { padding-bottom: 0; }
   font-weight: 650;
 }
 .name-picks button.is-on, .toolbar .ghost.is-on { background: var(--red); color: #fff; border-color: var(--red); }
-.print-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 0.5rem; }
+.print-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 140px)); gap: 0.45rem; }
 .print-grid button {
   border: 1px solid var(--line);
   background: #fff;
   border-radius: 12px;
-  padding: 0.4rem;
+  padding: 0.35rem;
   cursor: pointer;
   text-align: center;
 }
-.print-grid img { width: 100%; border-radius: 6px; }
-.print-grid strong, .print-grid span { display: block; }
+.print-grid img { width: 100%; height: 104px; object-fit: contain; border-radius: 6px; background: #f6f6f7; }
+.print-grid strong, .print-grid span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .print-grid span { color: var(--muted); font-size: 0.72rem; }
 .stat img { width: 22px; height: 22px; object-fit: contain; }
 .stat.dark { background: var(--red); color: #fff; }
@@ -1010,7 +1015,9 @@ body.has-cookie { padding-bottom: 0; }
   .photo-box { flex-direction: column; align-items: flex-start; }
   .actions { display: flex; flex-wrap: wrap; }
   .actions .solid, .actions .ghost { flex: 1 1 9rem; width: auto; justify-content: center; }
-  .print-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .print-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .print-grid img { height: 78px; }
+  .print-grid strong, .print-grid span { font-size: 0.64rem; }
   .split { grid-template-columns: 1fr; }
   .client {
     grid-template-columns: 1fr;
