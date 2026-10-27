@@ -254,7 +254,7 @@ button, input, select { font: inherit; color: inherit; }
   position: relative;
   width: 100vw;
   max-width: 100vw;
-  height: clamp(210px, 20vw, 380px);
+  height: clamp(240px, 32vw, 460px);
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
   margin-bottom: 0;

@@ -143,7 +143,7 @@
     return `
       <div class="hero">
         <div class="hero-rotator">
-          <img src="assets/banner-bemvindo.jpg?v=1" alt="Bem-vindo ao mundo do A.M.D TCG" />
+          <img src="assets/banner-bemvindo.jpg?v=2" alt="Booster box, packs e cartas avulsas" />
           <img src="assets/banner.jpg?v=4" alt="Um novo site para os amantes de Pokémon" />
           <a href="#/cadastro" aria-label="Clientes cadastrados ganham 5% de desconto">
             <img src="assets/banner-desconto.jpg?v=4" alt="" />
@@ -559,11 +559,26 @@
 
   async function saveCustomer(sb, profile) {
     if (!sb || !profile?.email) return;
-    await sb.from("customers").insert({
+    const { error } = await sb.from("customers").insert({
       name: profile.name || "",
       email: profile.email,
       phone: profile.phone || "",
     });
+    if (error && !/duplicate|unique/i.test(error.message || "")) console.warn(error.message);
+  }
+
+  function rememberAccount(profile) {
+    const current = account() || {};
+    const next = {
+      name: (profile.name || current.name || "").trim(),
+      email: (profile.email || current.email || "").trim(),
+      phone: (profile.phone || current.phone || "").trim(),
+    };
+    if (!next.name && next.email) next.name = next.email.split("@")[0];
+    if (!next.email) return null;
+    localStorage.setItem("amd.account", JSON.stringify(next));
+    sessionStorage.setItem("amd.session", next.email);
+    return next;
   }
 
   async function onSignin(event) {
@@ -579,11 +594,12 @@
         const { data, error } = await sb.auth.signInWithPassword({ email, password });
         if (error) { msg.textContent = error.message; return; }
         const meta = data.user?.user_metadata || {};
-        await saveCustomer(sb, {
+        const profile = rememberAccount({
           name: meta.name || saved?.name || "",
-          email,
+          email: data.user?.email || email,
           phone: meta.phone || saved?.phone || "",
         });
+        await saveCustomer(sb, profile);
       } else if (!saved || saved.email !== email) {
         msg.textContent = "Cadastre-se primeiro.";
         return;
@@ -607,8 +623,9 @@
     if (signup) signup.hidden = on;
     if (leave) leave.hidden = !on;
     if (menuSignup) menuSignup.hidden = on;
-    if (user && on) {
-      link.textContent = user.name.split(" ")[0];
+    if (on) {
+      const raw = user?.name || "Conta";
+      link.textContent = (raw.includes("@") ? raw.split("@")[0] : raw).split(" ")[0];
       link.href = "#/";
     } else {
       link.textContent = "Entrar";
@@ -636,9 +653,14 @@
         if (!error) sessionStorage.removeItem("amd.session");
         return;
       }
-      const email = data.session.user.email || "";
-      const saved = sessionStorage.getItem("amd.session");
-      if (saved && email && saved !== email) sessionStorage.removeItem("amd.session");
+      const user = data.session.user;
+      const meta = user.user_metadata || {};
+      const profile = rememberAccount({
+        name: meta.name || "",
+        email: user.email || "",
+        phone: meta.phone || "",
+      });
+      await saveCustomer(sb, profile);
     } catch { /* sem rede, mantém a sessão que já está no aparelho */ }
   }
 
