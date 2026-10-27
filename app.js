@@ -168,6 +168,65 @@
       </div>`;
   }
 
+  function setRails(products) {
+    const groups = new Map();
+    for (const product of products) {
+      const key = product.set || "";
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(product);
+    }
+    const known = shop.sets.map((set) => set.id).filter((id) => groups.has(id));
+    const extra = [...groups.keys()].filter((id) => !known.includes(id));
+    const ids = [...known, ...extra];
+    if (!ids.length) return `<p class="empty">Nenhum item no momento.</p>`;
+    return ids.map((id) => {
+      const set = setOf(id);
+      const items = groups.get(id);
+      return `
+        <div class="set-rail">
+          <div class="section-head">
+            <h3>${esc(set.name)} <span>${esc(set.code)}</span></h3>
+            <a href="#/set/${esc(set.id)}">Ver coleção</a>
+          </div>
+          <div class="row">${items.map(cardHtml).join("")}</div>
+        </div>`;
+    }).join("");
+  }
+
+  function bindRails() {
+    document.querySelectorAll(".row").forEach((row) => {
+      if (row.dataset.drag) return;
+      row.dataset.drag = "1";
+      let startX = 0;
+      let startScroll = 0;
+      let moved = false;
+      row.addEventListener("pointerdown", (event) => {
+        if (event.pointerType === "touch") return;
+        startX = event.clientX;
+        startScroll = row.scrollLeft;
+        moved = false;
+        row.setPointerCapture(event.pointerId);
+      });
+      row.addEventListener("pointermove", (event) => {
+        if (!row.hasPointerCapture(event.pointerId)) return;
+        const dx = event.clientX - startX;
+        if (Math.abs(dx) > 5) {
+          moved = true;
+          row.classList.add("is-drag");
+        }
+        row.scrollLeft = startScroll - dx;
+      });
+      const end = () => row.classList.remove("is-drag");
+      row.addEventListener("pointerup", end);
+      row.addEventListener("pointercancel", end);
+      row.addEventListener("click", (event) => {
+        if (!moved) return;
+        event.preventDefault();
+        event.stopPropagation();
+        moved = false;
+      }, true);
+    });
+  }
   function shelf(id, title, lede, body) {
     return `
       <section class="shelf" id="${id}">
@@ -289,6 +348,7 @@
     queueMicrotask(() => {
       spinHero();
       bindJumps();
+      bindRails();
     });
     const { name, id } = route();
     const query = qInput.value.trim().toLowerCase();
@@ -427,7 +487,8 @@
 
     if (name === "avulsos") {
       document.title = "Avulsos · A.M.D TCG";
-      main.innerHTML = listPage("Avulsos", "Unidades escolhidas uma a uma.", shop.products.filter((p) => p.kind === "single"));
+      const singles = shop.products.filter((product) => product.kind === "single");
+      main.innerHTML = `<h1 class="page-title">Avulsos</h1><p class="lede">Unidades escolhidas uma a uma.</p>${setRails(singles)}`;
       return;
     }
     if (name === "lacrados") {
@@ -473,7 +534,7 @@
         <button type="button" data-jump="loja-avulsos">Avulsos<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
         <button type="button" data-jump="loja-lacrados">Lacrados<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
       </nav>
-      ${shelf("loja-avulsos", "Avulsos", "Unidades escolhidas uma a uma.", cards(singles))}
+      ${shelf("loja-avulsos", "Avulsos", "Unidades escolhidas uma a uma.", setRails(singles))}
       ${shelf("loja-lacrados", "Lacrados", "Caixas e packs fechados de fábrica.", cards(sealed))}`;
   }
 

@@ -433,8 +433,21 @@ button, input, select { font: inherit; color: inherit; }
   grid-auto-columns: 200px;
   gap: 0.75rem;
   overflow-x: auto;
-  padding-bottom: 0.35rem;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  padding: 0.2rem 0.05rem 0.7rem;
+  cursor: grab;
+  scrollbar-width: thin;
 }
+.row::-webkit-scrollbar { height: 6px; }
+.row::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 99px; }
+.row.is-drag { cursor: grabbing; scroll-snap-type: none; }
+.row .card { scroll-snap-align: start; height: 100%; }
+.set-rail { margin: 0.15rem 0 0.85rem; }
+.set-rail .section-head { margin: 0.15rem 0 0.35rem; }
+.set-rail h3 { margin: 0; font-size: 1rem; letter-spacing: -0.02em; }
+.set-rail h3 span { color: var(--muted); font-weight: 650; font-size: 0.82rem; }
+.set-rail h3 span::before { content: "· "; margin-right: 0.15rem; }
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -632,6 +645,7 @@ body.has-cookie { padding-bottom: 0; }
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.5rem;
   }
+  .row { grid-auto-columns: min(168px, 72vw); }
   .card-body { padding: 0.45rem 0.45rem 0.1rem; }
   .card h3 { font-size: 0.82rem; }
   .tags { gap: 0.22rem; }
