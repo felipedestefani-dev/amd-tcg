@@ -265,7 +265,10 @@
             <button type="button" data-qty="1" data-id="${esc(product.id)}" aria-label="Aumentar">+</button>
           </div>
           <strong>${esc(money(product.price))}</strong>
-          <button class="ghost danger row-delete" type="button" data-remove="${esc(product.id)}">Excluir</button>
+          <div class="row-actions">
+            <button class="ghost row-edit" type="button" data-edit="${esc(product.id)}">Editar</button>
+            <button class="ghost danger row-delete" type="button" data-remove="${esc(product.id)}">Excluir</button>
+          </div>
         </div>`;
     }).join("");
   }
@@ -564,6 +567,15 @@ create policy "ler clientes" on public.customers for select to authenticated usi
         event.preventDefault();
         const product = catalog.find((item) => item.id === removeBtn.dataset.remove);
         if (product && confirm(`Excluir ${product.name}?`)) await removeProduct(product);
+        return;
+      }
+      const editBtn = event.target.closest("[data-edit]");
+      if (editBtn) {
+        event.preventDefault();
+        const product = catalog.find((item) => item.id === editBtn.dataset.edit);
+        if (!product) return;
+        if (document.getElementById("editor-slot")) openEditor(product);
+        else { view = "stock"; editing = product; await paintDesk(); }
         return;
       }
       const step = event.target.closest("[data-qty]");

@@ -369,6 +369,14 @@
       return;
     }
 
+    if (name === "conta") {
+      if (!loggedIn()) { location.hash = "#/entrar"; return; }
+      document.title = "Conta · A.M.D TCG";
+      main.innerHTML = profileCard(account() || {});
+      fillProfile();
+      return;
+    }
+
     if (name === "entrar") {
       document.title = "Entrar · A.M.D TCG";
       const user = account();
@@ -606,6 +614,55 @@
     if (error && !/duplicate|unique/i.test(error.message || "")) console.warn(error.message);
   }
 
+  function titled(value) {
+    const text = String(value || "").trim();
+    if (!text || text.includes("@")) return "";
+    return text.split(/\s+/).filter(Boolean).map((part) => part.charAt(0).toLocaleUpperCase("pt-BR") + part.slice(1)).join(" ");
+  }
+
+  function profileCard(user) {
+    const phone = String(user.phone || "").trim();
+    return `
+      <div class="auth">
+        <section class="auth-card profile-card">
+          <a class="brand" href="#/" aria-label="A.M.D TCG, início"><img src="assets/logo-mark.png?v=10" alt="" width="120" height="80" /></a>
+          <h1 class="page-title">Sua conta</h1>
+          <p class="lede">Clientes cadastrados ganham 5% de desconto.</p>
+          <dl class="profile">
+            <div><dt>Nome</dt><dd id="profile-name">${esc(titled(user.name) || "Não informado")}</dd></div>
+            <div><dt>E-mail</dt><dd id="profile-email">${esc(user.email || "Não informado")}</dd></div>
+            <div><dt>Telefone</dt><dd id="profile-phone">${esc(phone || "Não informado")}</dd></div>
+          </dl>
+        </section>
+      </div>`;
+  }
+
+  async function fillProfile() {
+    try {
+      const sb = await window.AMD_SB.client();
+      if (!sb || route().name !== "conta") return;
+      const { data } = await sb.auth.getUser();
+      const user = data.user;
+      if (!user) return;
+      const meta = user.user_metadata || {};
+      const email = user.email || "";
+      const { data: row } = await sb.from("customers").select("name,phone").eq("email", email).maybeSingle();
+      const next = rememberAccount({
+        name: meta.name || row?.name || "",
+        email,
+        phone: meta.phone || row?.phone || "",
+      });
+      if (!next || route().name !== "conta") return;
+      const name = document.getElementById("profile-name");
+      const mail = document.getElementById("profile-email");
+      const phone = document.getElementById("profile-phone");
+      if (name) name.textContent = titled(next.name) || titled(row?.name) || "Não informado";
+      if (mail) mail.textContent = next.email || "Não informado";
+      if (phone) phone.textContent = next.phone || "Não informado";
+      paintAccount();
+    } catch { /* a conta local continua na tela */ }
+  }
+
   function personName(value, email) {
     const text = String(value || "").trim();
     if (!text || text.includes("@")) return "";
@@ -680,7 +737,7 @@
     if (menuSignup) menuSignup.hidden = on;
     if (on) {
       link.textContent = personName(user?.name, user?.email) || "Conta";
-      link.href = "#/";
+      link.href = "#/conta";
     } else {
       link.textContent = "Entrar";
       link.href = "#/entrar";

@@ -839,7 +839,12 @@ body.has-cookie { padding-bottom: 0; }
   font-weight: 700;
 }
 .qty-step b { min-width: 1.2rem; text-align: center; }
-.row-delete { min-height: 34px; padding: 0 0.7rem; white-space: nowrap; }
+.row-actions { display: flex; gap: 0.35rem; flex: none; }
+.row-edit, .row-delete { min-height: 34px; padding: 0 0.7rem; white-space: nowrap; }
+.profile { margin: 0.2rem 0 0.4rem; text-align: left; }
+.profile div { padding: 0.75rem 0; border-top: 1px solid var(--line); }
+.profile dt { color: var(--muted); font-size: 0.78rem; font-weight: 650; }
+.profile dd { margin: 0.15rem 0 0; font-weight: 700; overflow-wrap: anywhere; }
 .photo-box { display: flex; gap: 0.9rem; align-items: center; }
 .photo-actions { display: grid; gap: 0.4rem; justify-items: start; }
 .photo-actions p { margin: 0; color: var(--muted); font-size: 0.82rem; font-weight: 500; }
@@ -991,7 +996,7 @@ body.has-cookie { padding-bottom: 0; }
   .prow {
     display: grid;
     grid-template-columns: 1fr auto;
-    grid-template-areas: "open open" "qty price" "delete delete";
+    grid-template-areas: "open open" "qty price" "actions actions";
     align-items: center;
     gap: 0.5rem 0.6rem;
     padding: 0.75rem;
@@ -1000,7 +1005,8 @@ body.has-cookie { padding-bottom: 0; }
   .prow-open strong, .prow-open span { overflow-wrap: anywhere; }
   .qty-step { grid-area: qty; }
   .prow > strong { grid-area: price; justify-self: end; }
-  .row-delete { grid-area: delete; width: 100%; }
+  .row-actions { grid-area: actions; }
+  .row-actions .ghost { flex: 1; justify-content: center; }
   .photo-box { flex-direction: column; align-items: flex-start; }
   .actions { display: flex; flex-wrap: wrap; }
   .actions .solid, .actions .ghost { flex: 1 1 9rem; width: auto; justify-content: center; }
