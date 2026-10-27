@@ -734,11 +734,11 @@
     });
   });
 
+  bindCookies();
+  document.getElementById("sair").onclick = logout;
   loadRemote().finally(async () => {
     await syncAccount();
     fillSets();
-    bindCookies();
-    document.getElementById("sair").onclick = logout;
     render();
   });
 })();
