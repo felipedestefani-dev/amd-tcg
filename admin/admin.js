@@ -75,26 +75,38 @@
       </div>`;
   }
 
-  function productForm(product) {
+  function productForm(product, kind) {
+    const mode = product?.kind || kind || "single";
+    const sealed = mode === "sealed";
     const sets = shop.sets.map((set) => `<option value="${esc(set.id)}" ${product && product.set_id === set.id ? "selected" : ""}>${esc(set.name)}</option>`).join("");
-    const p = product || { id: "", kind: "single", name: "", set_id: shop.sets[0]?.id || "", number: "", rarity: "", condition: "NM", lang: "PT", finish: "Normal", qty: 1, price: "" };
+    const p = product || { id: "", kind: mode, name: "", set_id: shop.sets[0]?.id || "", number: "", rarity: "", condition: sealed ? "" : "NM", lang: sealed ? "" : "PT", finish: sealed ? "Lacrado" : "Normal", qty: 1, price: "" };
     const file = String(p.number || "").split("/")[0];
-    const auto = file && p.set_id ? `https://images.pokemontcg.io/${esc(p.set_id)}/${esc(file)}.png` : "";
+    const auto = !sealed && file && p.set_id ? `https://images.pokemontcg.io/${esc(p.set_id)}/${esc(file)}.png` : "";
     const preview = draftImage || auto;
-    const sealed = p.kind === "sealed";
+    const search = sealed ? `
+        <label>Produto<input id="sealed-q" type="search" placeholder="Coleção, ex. Evoluções Prismáticas" autocomplete="off" /></label>
+        <div id="sealed-types" class="name-picks"></div>
+        <div id="sealed-hits" class="print-grid"></div>` : `
+        <label>Nome<input id="poke-name" type="search" placeholder="Ex. Charizard" autocomplete="off" /></label>
+        <div id="poke-names" class="name-picks"></div>
+        <label>Número<input id="poke-number" type="search" placeholder="Número da carta" autocomplete="off" /></label>
+        <div id="card-hits" class="print-grid"></div>`;
+    const specifics = sealed ? `
+        <input type="hidden" name="number" value="${esc(p.number)}" />
+        <input type="hidden" name="rarity" value="${esc(p.rarity)}" />
+        <input type="hidden" name="condition" value="${esc(p.condition)}" />
+        <input type="hidden" name="lang" value="${esc(p.lang)}" />
+        <input type="hidden" name="finish" value="${esc(p.finish || "Lacrado")}" />
+        <div class="row-2">${field("qty", "Quantidade", p.qty, "number")}${field("price", "Preço", p.price, "number")}</div>` : `
+        <div class="row-2">${field("number", "Número", p.number)}${field("rarity", "Raridade", p.rarity)}</div>
+        <div class="row-2">${field("condition", "Condição", p.condition)}${field("lang", "Idioma", p.lang)}</div>
+        <div class="row-2">${field("finish", "Acabamento", p.finish)}${field("qty", "Quantidade", p.qty, "number")}</div>
+        ${field("price", "Preço", p.price, "number")}`;
     return `
       <form id="editor" class="fields">
-        <div id="single-search" ${sealed ? "hidden" : ""}>
-          <label>Nome<input id="poke-name" type="search" placeholder="Ex. Charizard" autocomplete="off" /></label>
-          <div id="poke-names" class="name-picks"></div>
-          <label>Número<input id="poke-number" type="search" placeholder="Número da carta" autocomplete="off" /></label>
-          <div id="card-hits" class="print-grid"></div>
-        </div>
-        <div id="sealed-search" ${sealed ? "" : "hidden"}>
-          <label>Lacrado<input id="sealed-q" type="search" placeholder="Coleção, ex. Evoluções Prismáticas" autocomplete="off" /></label>
-          <div id="sealed-types" class="name-picks"></div>
-          <div id="sealed-hits" class="print-grid"></div>
-        </div>
+        <h2>${product ? (sealed ? "Produto" : "Carta") : (sealed ? "Adicionar produto" : "Adicionar carta")}</h2>
+        <input type="hidden" name="kind" value="${sealed ? "sealed" : "single"}" />
+        ${search}
         <div class="photo-box">
           ${preview ? `<img id="card-preview" class="card-preview" src="${esc(preview)}" alt="" />` : `<div id="card-preview" class="card-preview empty">Sem foto</div>`}
           <div class="photo-actions">
@@ -104,14 +116,8 @@
           </div>
         </div>
         <div class="row-2">${field("id", "Código", p.id)}${field("name", "Nome", p.name)}</div>
-        <div class="row-2">
-          <label>Tipo<select name="kind"><option value="single" ${p.kind === "single" ? "selected" : ""}>Avulso</option><option value="sealed" ${p.kind === "sealed" ? "selected" : ""}>Lacrado</option></select></label>
-          <label>Coleção<select name="set_id">${sets}</select></label>
-        </div>
-        <div class="row-2">${field("number", "Número", p.number)}${field("rarity", "Raridade", p.rarity)}</div>
-        <div class="row-2">${field("condition", "Condição", p.condition)}${field("lang", "Idioma", p.lang)}</div>
-        <div class="row-2">${field("finish", "Acabamento", p.finish)}${field("qty", "Quantidade", p.qty, "number")}</div>
-        ${field("price", "Preço", p.price, "number")}
+        <label>Coleção<select name="set_id">${sets}</select></label>
+        ${specifics}
         <div class="actions">
           <button class="solid" type="submit">${product ? "Salvar" : "Adicionar"}</button>
           ${product ? `<button class="ghost" type="button" id="copy">Duplicar</button>` : ""}
@@ -123,7 +129,11 @@
 
   async function refreshSets() {
     const { data, error } = await sb.from("sets").select("id,name,code,sort").order("sort");
-    if (!error && data) shop.sets = data.map((set) => ({ id: set.id, name: set.name, code: set.code }));
+    if (!error && data) {
+      for (const set of data) {
+        if (!shop.sets.some((item) => item.id === set.id)) shop.sets.push({ id: set.id, name: set.name, code: set.code });
+      }
+    }
   }
 
   function thumb(product) {
@@ -216,7 +226,10 @@
         <h2>${units} ${units === 1 ? "unidade" : "unidades"} na vitrine</h2>
         <p>${low.length ? "Estoque baixo ou zerado:" : "Nenhum item com estoque baixo."}</p>
         <div class="plist">${productRows(low)}</div>
-        <div class="actions"><button class="solid" type="button" id="novo"><img src="/assets/icons/cards.png" alt="" />Novo item</button></div>
+        <div class="actions">
+          <button class="solid" type="button" id="add-card">Adicionar carta</button>
+          <button class="solid" type="button" id="add-product">Adicionar produto</button>
+        </div>
       </section>`);
   }
 
@@ -366,7 +379,8 @@ create policy "ler visitas" on public.visits for select to authenticated using (
           <option value="single" ${stockKind === "single" ? "selected" : ""}>Avulsos</option>
           <option value="sealed" ${stockKind === "sealed" ? "selected" : ""}>Lacrados</option>
         </select>
-        <button class="solid" type="button" id="novo"><img src="/assets/icons/cards.png" alt="" />Novo item</button>
+        <button class="solid" type="button" id="add-card">Adicionar carta</button>
+        <button class="solid" type="button" id="add-product">Adicionar produto</button>
         <button class="ghost" type="button" id="seed">Enviar vitrine de exemplo</button>
       </div>
       <div id="editor-slot"></div>
@@ -382,7 +396,8 @@ create policy "ler visitas" on public.visits for select to authenticated using (
           <strong>${esc(set.id)}</strong>
         </button>`;
     }).join("");
-    return shell("Coleções", "Nome e código de cada coleção.", `
+    return shell("Coleções", "Todas as coleções, para escolher na carta ou no produto.", `
+      <input id="set-q" class="set-find" type="search" placeholder="Buscar coleção" />
       <section class="panel">
         <h2>Nova coleção</h2>
         <form id="set-form" class="fields">
@@ -399,12 +414,22 @@ create policy "ler visitas" on public.visits for select to authenticated using (
       button.onclick = () => { view = button.dataset.view; editing = null; paintDesk(); };
     });
     document.getElementById("sair").onclick = async () => { await sb.auth.signOut(); session = null; paint(); };
-    const novo = document.getElementById("novo");
-    if (novo) novo.onclick = async () => {
+    const openNew = async (kind) => {
       view = "stock";
       editing = null;
       await paintDesk();
-      openEditor(null);
+      openEditor(null, kind);
+    };
+    const addCard = document.getElementById("add-card");
+    const addProduct = document.getElementById("add-product");
+    if (addCard) addCard.onclick = () => openNew("single");
+    if (addProduct) addProduct.onclick = () => openNew("sealed");
+    const setQuery = document.getElementById("set-q");
+    if (setQuery) setQuery.oninput = () => {
+      const query = setQuery.value.trim().toLowerCase();
+      document.querySelectorAll("#set-list [data-set]").forEach((button) => {
+        button.hidden = query && !button.textContent.toLowerCase().includes(query);
+      });
     };
     const seedButton = document.getElementById("seed");
     if (seedButton) seedButton.onclick = seed;
@@ -578,11 +603,12 @@ create policy "ler visitas" on public.visits for select to authenticated using (
     if (!error) { editing = null; paintDesk(); }
   }
 
-  function openEditor(product) {
+  function openEditor(product, kind) {
+    const mode = product?.kind || kind || "single";
     editing = product;
     draftImage = product?.image || "";
     const slot = document.getElementById("editor-slot");
-    slot.innerHTML = `<div class="panel" style="box-shadow:none">${productForm(product)}</div>`;
+    slot.innerHTML = `<div class="panel" style="box-shadow:none">${productForm(product, mode)}</div>`;
     document.getElementById("cancel").onclick = () => { slot.innerHTML = ""; draftImage = ""; };
     const remove = document.getElementById("remove");
     if (remove) remove.onclick = removeProduct;
@@ -600,9 +626,17 @@ create policy "ler visitas" on public.visits for select to authenticated using (
     });
     document.getElementById("photo-clear").onclick = () => {
       draftImage = "";
-      showPreview(autoArt());
+      showPreview(mode === "sealed" ? "" : autoArt());
     };
     document.getElementById("editor").addEventListener("submit", saveProduct);
+    if (mode === "sealed") {
+      const input = document.getElementById("sealed-q");
+      input.addEventListener("input", () => {
+        clearTimeout(sealedTimer);
+        sealedTimer = setTimeout(() => searchSealedProducts(input.value), 350);
+      });
+      return;
+    }
     const nameInput = document.getElementById("poke-name");
     nameInput.addEventListener("input", () => {
       chosenName = "";
@@ -612,22 +646,6 @@ create policy "ler visitas" on public.visits for select to authenticated using (
       searchTimer = setTimeout(() => searchPokemonNames(nameInput.value), 350);
     });
     document.getElementById("poke-number").addEventListener("input", renderPrintings);
-    const kindSelect = document.querySelector("#editor select[name=kind]");
-    const syncKind = () => {
-      const sealed = kindSelect.value === "sealed";
-      document.getElementById("single-search").hidden = sealed;
-      document.getElementById("sealed-search").hidden = !sealed;
-      if (!sealed) return;
-      const input = document.getElementById("sealed-q");
-      if (!input.value) input.value = setName(document.getElementById("editor").elements.set_id.value);
-      searchSealedProducts(input.value);
-    };
-    kindSelect.addEventListener("change", syncKind);
-    document.getElementById("sealed-q").addEventListener("input", () => {
-      clearTimeout(sealedTimer);
-      sealedTimer = setTimeout(() => searchSealedProducts(document.getElementById("sealed-q").value), 350);
-    });
-    if (kindSelect.value === "sealed") syncKind();
   }
 
   function parseCardSearch(text) {

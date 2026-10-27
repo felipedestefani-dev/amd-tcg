@@ -336,7 +336,13 @@
         const count = shop.products.filter((product) => product.set === set.id).length;
         return `<a class="set-link" href="#/set/${esc(set.id)}"><strong>${esc(set.name)}</strong><span>${esc(set.code)} · ${count}</span></a>`;
       }).join("");
-      main.innerHTML = `<h1 class="page-title">Coleções</h1><p class="lede">O estoque separado por coleção.</p><div class="sets">${rows}</div>`;
+      main.innerHTML = `<h1 class="page-title">Coleções</h1><p class="lede">Escolha a coleção.</p><input id="set-find" class="set-find" type="search" placeholder="Buscar coleção" /><div class="sets" id="set-list">${rows}</div>`;
+      document.getElementById("set-find").addEventListener("input", (event) => {
+        const query = event.target.value.trim().toLowerCase();
+        document.querySelectorAll("#set-list .set-link").forEach((link) => {
+          link.hidden = query && !link.textContent.toLowerCase().includes(query);
+        });
+      });
       return;
     }
     if (name === "set") {
@@ -356,19 +362,13 @@
     const cards = (items) => items.length
       ? `<div class="grid">${items.map(cardHtml).join("")}</div>`
       : `<p class="empty">Nenhum item no momento.</p>`;
-    const sets = shop.sets.map((set) => {
-      const count = shop.products.filter((product) => product.set === set.id).length;
-      return `<a class="set-link" href="#/set/${esc(set.id)}"><strong>${esc(set.name)}</strong><span>${esc(set.code)} · ${count}</span></a>`;
-    }).join("") || `<p class="empty">Nenhuma coleção no momento.</p>`;
     main.innerHTML = banner() + `
       <nav class="jumps" aria-label="Seções do catálogo">
         <button type="button" data-jump="loja-avulsos">Avulsos<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
         <button type="button" data-jump="loja-lacrados">Lacrados<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
-        <button type="button" data-jump="loja-colecoes">Coleções<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
       </nav>
       ${shelf("loja-avulsos", "Avulsos", "Unidades escolhidas uma a uma.", cards(singles))}
-      ${shelf("loja-lacrados", "Lacrados", "Caixas e packs fechados de fábrica.", cards(sealed))}
-      ${shelf("loja-colecoes", "Coleções", "O estoque separado por coleção.", `<div class="sets">${sets}</div>`)}`;
+      ${shelf("loja-lacrados", "Lacrados", "Caixas e packs fechados de fábrica.", cards(sealed))}`;
   }
 
   async function onSignup(event) {
@@ -458,7 +458,9 @@
         rowsError = again.error;
       }
       if (setError || rowsError || !rows || !rows.length) return;
-      shop.sets = (sets || []).map((set) => ({ id: set.id, name: set.name, code: set.code }));
+      for (const set of sets || []) {
+        if (!shop.sets.some((item) => item.id === set.id)) shop.sets.push({ id: set.id, name: set.name, code: set.code });
+      }
       shop.products = rows.map((product) => ({
         id: product.id,
         kind: product.kind,
