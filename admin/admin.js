@@ -126,6 +126,21 @@
     return `<label>${esc(label)}<input name="${esc(name)}" type="${type || "text"}" value="${esc(value)}" /></label>`;
   }
 
+  function priceField(value) {
+    const amount = Number(value);
+    const shown = value === "" || value == null || !Number.isFinite(amount) ? "" : amount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `<label>Preço<input name="price" type="text" inputmode="decimal" placeholder="13,99" value="${esc(shown)}" autocomplete="off" /></label>`;
+  }
+
+  function readPrice(value) {
+    const text = String(value || "").trim().replace(/\s/g, "").replace(/^r\$/i, "");
+    if (!text) return 0;
+    const normalized = text.includes(",") ? text.replace(/\./g, "").replace(",", ".") : text;
+    const amount = Number(normalized);
+    if (!Number.isFinite(amount)) return null;
+    return Math.round(amount * 100) / 100;
+  }
+
   function loginScreen() {
     return `
       <div class="login-wrap">
@@ -168,11 +183,11 @@
         <input type="hidden" name="condition" value="${esc(p.condition)}" />
         <input type="hidden" name="lang" value="${esc(p.lang)}" />
         <input type="hidden" name="finish" value="${esc(p.finish || "Lacrado")}" />
-        <div class="row-2">${field("qty", "Quantidade", p.qty, "number")}${field("price", "Preço", p.price, "number")}</div>` : `
+        <div class="row-2">${field("qty", "Quantidade", p.qty, "number")}${priceField(p.price)}</div>` : `
         <div class="row-2">${field("number", "Número", p.number)}${field("rarity", "Raridade", p.rarity)}</div>
         <div class="row-2">${field("condition", "Condição", p.condition)}${field("lang", "Idioma", p.lang)}</div>
         <div class="row-2">${field("finish", "Acabamento", p.finish)}${field("qty", "Quantidade", p.qty, "number")}</div>
-        ${field("price", "Preço", p.price, "number")}`;
+        ${priceField(p.price)}`;
     return `
       <form id="editor" class="fields">
         <h2>${product ? (sealed ? "Produto" : "Carta") : (sealed ? "Adicionar produto" : "Adicionar carta")}</h2>
@@ -1161,11 +1176,12 @@ create policy "ler clientes" on public.customers for select to authenticated usi
       lang: String(form.get("lang") || "").trim(),
       finish: String(form.get("finish") || "").trim(),
       qty: Number(form.get("qty") || 0),
-      price: Number(form.get("price") || 0),
+      price: readPrice(form.get("price")),
       image: draftImage || "",
     };
     const msg = document.getElementById("desk-msg");
     if (!row.id || !row.name || !row.set_id) { msg.textContent = "Código, nome e coleção são obrigatórios."; return; }
+    if (row.price == null || row.price < 0) { msg.textContent = "Informe o preço, como 13,99."; return; }
     const setRow = shop.sets.find((set) => set.id === row.set_id);
     if (setRow) {
       const setSave = await sb.from("sets").upsert({
