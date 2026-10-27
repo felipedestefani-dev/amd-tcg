@@ -1,8 +1,6 @@
 (function () {
   const root = document.getElementById("app");
   const shop = window.AMD_SHOP;
-  const localSets = shop.sets.map((set, index) => ({ id: set.id, name: set.name, code: set.code, sort: index }));
-  const localProducts = shop.products.map((product) => ({ ...product }));
   let sb = null;
   let session = null;
   let editing = null;
@@ -519,7 +517,6 @@ create policy "ler clientes" on public.customers for select to authenticated usi
         </select>
         <button class="solid" type="button" id="add-card">Adicionar carta</button>
         <button class="solid" type="button" id="add-product">Adicionar produto</button>
-        <button class="ghost" type="button" id="seed">Enviar vitrine de exemplo</button>
       </div>
       <div id="editor-slot"></div>
       <div class="plist" id="plist">${productRows(stockList())}</div>`);
@@ -559,8 +556,6 @@ create policy "ler clientes" on public.customers for select to authenticated usi
     const setQuery = document.getElementById("set-q");
     const setResults = document.getElementById("set-results");
     if (setQuery && setResults) bindSetSearch(setQuery, setResults, (set) => { if (set) editSet(set.id); });
-    const seedButton = document.getElementById("seed");
-    if (seedButton) seedButton.onclick = seed;
     const list = document.getElementById("plist");
     if (list) list.addEventListener("click", async (event) => {
       const removeBtn = event.target.closest("[data-remove]");
@@ -1184,30 +1179,6 @@ create policy "ler clientes" on public.customers for select to authenticated usi
     const msg = document.getElementById("desk-msg");
     msg.textContent = error ? error.message : "Item apagado.";
     if (!error) { editing = null; paintDesk(); }
-  }
-
-  async function seed() {
-    const msg = document.getElementById("desk-msg");
-    msg.textContent = "Enviando…";
-    const sets = localSets;
-    const products = localProducts.map((product) => ({
-      id: product.id,
-      kind: product.kind,
-      name: product.name,
-      set_id: product.set,
-      number: product.number || "",
-      rarity: product.rarity || "",
-      condition: product.condition || "",
-      lang: product.lang || "",
-      finish: product.finish || "",
-      qty: product.qty,
-      price: product.price,
-    }));
-    const setResult = await sb.from("sets").upsert(sets);
-    if (setResult.error) { msg.textContent = setResult.error.message; return; }
-    const productResult = await sb.from("products").upsert(products);
-    msg.textContent = productResult.error ? productResult.error.message : "Vitrine local enviada.";
-    if (!productResult.error) paintDesk();
   }
 
   async function paint() {
