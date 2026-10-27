@@ -567,24 +567,28 @@ button, input, select { font: inherit; color: inherit; }
 .cookie {
   position: fixed;
   z-index: 35;
-  left: 0.8rem;
-  right: 0.8rem;
-  bottom: 0.8rem;
+  right: 1rem;
+  bottom: 1rem;
+  left: auto;
+  width: min(360px, calc(100vw - 2rem));
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.7rem 1rem;
-  padding: 0.85rem 1rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+  padding: 0.9rem 1rem;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 16px;
   box-shadow: 0 12px 40px rgba(17, 17, 17, 0.12);
 }
-body.has-cookie { padding-bottom: 7.2rem; }
+body.has-cookie { padding-bottom: 0; }
+@media (max-width: 860px) {
+  body.has-cookie { padding-bottom: 13rem; }
+}
 .cookie[hidden] { display: none !important; }
-.cookie p { flex: 1 1 240px; margin: 0; color: var(--muted); font-size: 0.9rem; }
+.cookie p { margin: 0; color: var(--muted); font-size: 0.88rem; }
 .cookie > a { color: var(--red); font-weight: 700; text-decoration: none; }
-.cookie-actions { display: flex; gap: 0.45rem; }
+.cookie-actions { display: flex; justify-content: flex-end; gap: 0.45rem; }
 
 @keyframes rise {
   from { opacity: 0; transform: translateY(8px); }
