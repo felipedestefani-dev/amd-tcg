@@ -145,7 +145,7 @@
         <div class="hero-rotator">
           <img src="assets/banner.jpg?v=5" alt="Um novo site para os amantes de Pokémon" />
         <a href="#/cadastro" aria-label="Clientes cadastrados ganham 5% de desconto">
-          <img src="assets/banner-desconto.jpg?v=4" alt="" />
+          <img src="assets/banner-desconto.jpg?v=5" alt="" />
         </a>
         <a href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer" aria-label="AMD na Jamble, confira já">
           <img src="assets/banner-jamble.jpg?v=1" alt="" />
