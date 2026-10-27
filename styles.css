@@ -265,14 +265,16 @@ button, input, select { font: inherit; color: inherit; }
   top: calc(100% + 0.4rem);
   right: 0;
   width: min(340px, 100%);
-  max-height: 320px;
+  max-height: 70vh;
   overflow: auto;
+  scrollbar-width: none;
   padding: 0.35rem;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 16px;
   box-shadow: 0 18px 40px rgba(17, 17, 17, 0.12);
 }
+.set-pick-list::-webkit-scrollbar { display: none; }
 .set-pick-list[hidden] { display: none; }
 .set-pick-list button {
   display: flex;
@@ -1020,33 +1022,42 @@ body.has-cookie { padding-bottom: 0; }
   .top .search {
     flex-basis: 100%;
     order: 3;
-    grid-template-columns: 15px minmax(0, 1fr) minmax(8.2rem, 48%);
-    gap: 0.25rem;
+    grid-template-columns: 15px minmax(0, 1fr);
+    gap: 0;
     margin: 0;
-    padding: 0 0.35rem 0 0.7rem;
+    padding: 0.15rem 0.7rem 0.2rem;
     border: 0;
-    border-radius: 999px;
-    background: #f3f3f4;
+    border-radius: 18px;
+    background: #fff;
     box-shadow: inset 0 0 0 1px #e5e5e7;
   }
-  .top .search > img { width: 14px; height: 14px; opacity: 0.5; }
-  .top .search input,
-  .top .set-pick-btn {
-    height: 34px;
+  .top .search > img { width: 15px; height: 15px; opacity: 0.5; }
+  .top .search input {
+    height: 40px;
     min-width: 0;
-    font-size: 0.82rem;
+    font-size: 0.95rem;
   }
   .top .search input::placeholder { color: #8d8d95; }
+  .top .set-pick { grid-column: 1 / -1; }
   .top .set-pick-btn {
+    height: 46px;
     border: 0;
-    border-left: 1px solid #e7e7ea;
-    border-radius: 0 999px 999px 0;
-    padding-left: 0.45rem;
+    border-top: 1px solid #eee;
+    border-radius: 0;
+    padding: 0;
     background: #fff;
-    font-size: 0.72rem;
-    color: #3f3f46;
+    font-size: 0.95rem;
+    color: #111;
   }
-  .top .set-pick-btn img { width: 28px; height: 14px; opacity: 1; }
+  .top .set-pick-btn img { width: 64px; height: 28px; opacity: 1; }
+  .top .set-pick-list {
+    left: 0;
+    right: 0;
+    width: auto;
+    max-height: 62vh;
+  }
+  .top .set-pick-list button { min-height: 54px; font-size: 1rem; }
+  .top .set-pick-list img { width: 86px; height: 34px; }
   .top .search:focus-within {
     background: #fff;
     box-shadow: inset 0 0 0 1.5px var(--red);
