@@ -855,6 +855,17 @@ body.has-cookie { padding-bottom: 7.2rem; }
 .bar small, .bar b { font-size: 0.72rem; color: var(--muted); }
 .bar b { color: var(--text); }
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
+.client {
+  display: grid;
+  grid-template-columns: 1.1fr 1.4fr 0.9fr auto;
+  gap: 0.25rem 0.8rem;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.client strong { font-size: 0.98rem; }
+.client span, .client small { color: var(--muted); }
+.client small { font-size: 0.82rem; }
 .rank { display: grid; grid-template-columns: 1fr auto auto; gap: 0.35rem 0.7rem; align-items: center; margin: 0.55rem 0; }
 .rank i { grid-column: 1 / -1; height: 4px; background: var(--red); border-radius: 99px; display: block; }
 .sql { white-space: pre-wrap; font-size: 0.78rem; background: #f3f4f6; padding: 0.7rem; border-radius: 10px; }
@@ -946,4 +957,5 @@ body.has-cookie { padding-bottom: 7.2rem; }
   .actions .solid, .actions .ghost { width: 100%; justify-content: center; }
   .print-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .split { grid-template-columns: 1fr; }
+  .client { grid-template-columns: 1fr auto; }
 }

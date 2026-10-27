@@ -76,3 +76,26 @@ create policy "ler visitas"
   on public.visits for select
   to authenticated
   using (true);
+
+create table if not exists public.customers (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  name text not null default '',
+  email text not null unique,
+  phone text not null default ''
+);
+
+alter table public.customers enable row level security;
+
+drop policy if exists "registrar cliente" on public.customers;
+drop policy if exists "ler clientes" on public.customers;
+
+create policy "registrar cliente"
+  on public.customers for insert
+  to anon, authenticated
+  with check (true);
+
+create policy "ler clientes"
+  on public.customers for select
+  to authenticated
+  using (true);

@@ -543,6 +543,7 @@
           options: { data: { name: profile.name, phone: profile.phone } },
         });
         if (error) { msg.textContent = error.message; return; }
+        await saveCustomer(sb, profile);
       }
     } catch (error) {
       console.warn(error);
@@ -552,6 +553,15 @@
     sessionStorage.setItem("amd.session", profile.email);
     paintAccount();
     location.hash = "#/";
+  }
+
+  async function saveCustomer(sb, profile) {
+    if (!sb || !profile?.email) return;
+    await sb.from("customers").insert({
+      name: profile.name || "",
+      email: profile.email,
+      phone: profile.phone || "",
+    });
   }
 
   async function onSignin(event) {
@@ -564,8 +574,14 @@
     try {
       const sb = await window.AMD_SB.client();
       if (sb) {
-        const { error } = await sb.auth.signInWithPassword({ email, password });
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
         if (error) { msg.textContent = error.message; return; }
+        const meta = data.user?.user_metadata || {};
+        await saveCustomer(sb, {
+          name: meta.name || saved?.name || "",
+          email,
+          phone: meta.phone || saved?.phone || "",
+        });
       } else if (!saved || saved.email !== email) {
         msg.textContent = "Cadastre-se primeiro.";
         return;
