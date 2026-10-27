@@ -54,24 +54,8 @@ body {
   font-size: 16px;
   line-height: 1.45;
   color: var(--text);
-  background: #f7f5f5;
+  background: var(--bg);
 }
-.admin-body { background: #f3f4f6; }
-.glow {
-  position: fixed;
-  z-index: 0;
-  width: 880px;
-  height: 880px;
-  border-radius: 50%;
-  pointer-events: none;
-  filter: blur(70px);
-  background:
-    radial-gradient(circle at 42% 58%, rgba(200, 30, 30, 0.55), transparent 52%),
-    radial-gradient(circle at 62% 38%, rgba(200, 30, 30, 0.28), transparent 58%);
-}
-.glow-a { top: -260px; right: -220px; }
-.glow-b { width: 760px; height: 760px; top: 38vh; left: -280px; background: radial-gradient(circle at 50% 50%, rgba(200, 30, 30, 0.42), transparent 54%); }
-.glow-c { width: 680px; height: 680px; bottom: -220px; right: -40px; background: radial-gradient(circle at 50% 46%, rgba(200, 30, 30, 0.36), transparent 55%); }
 
 img { max-width: 100%; display: block; }
 a { color: inherit; }
@@ -160,7 +144,7 @@ button, input, select { font: inherit; color: inherit; }
 .buy:active, .ask:active, .solid:active { transform: scale(0.98); }
 .buy img, .ask img { width: 16px; height: 16px; object-fit: contain; filter: invert(1); }
 
-.shell { position: relative; z-index: 1; min-height: calc(100vh - 88px); }
+.shell { min-height: calc(100vh - 88px); }
 
 .menu-toggle {
   display: inline-flex;
