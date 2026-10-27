@@ -144,12 +144,12 @@
       <div class="hero">
         <div class="hero-rotator">
           <img src="assets/banner.jpg?v=4" alt="Um novo site para os amantes de Pokémon" />
-          <a href="#/cadastro" aria-label="Clientes cadastrados ganham 5% de desconto">
-            <img src="assets/banner-desconto.jpg?v=4" alt="" />
-          </a>
-          <a href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer" aria-label="AMD na Jamble, confira já">
-            <img src="assets/banner-jamble.jpg?v=1" alt="" />
-          </a>
+        <a href="#/cadastro" aria-label="Clientes cadastrados ganham 5% de desconto">
+          <img src="assets/banner-desconto.jpg?v=4" alt="" />
+        </a>
+        <a href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer" aria-label="AMD na Jamble, confira já">
+          <img src="assets/banner-jamble.jpg?v=1" alt="" />
+        </a>
         </div>
         <div class="hero-dots">
           <button type="button" aria-label="Primeiro banner"></button>
@@ -224,9 +224,21 @@
     const slides = [...box.children];
     const dots = [...document.querySelectorAll(".hero-dots button")];
     let index = 0;
+    const fit = (slide) => {
+      const img = slide.tagName === "IMG" ? slide : slide.querySelector("img");
+      if (!img) return;
+      const apply = () => {
+        if (!slide.classList.contains("is-on") || !img.naturalWidth) return;
+        box.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`;
+        box.style.width = `min(100vw, ${img.naturalWidth}px)`;
+      };
+      if (img.complete && img.naturalWidth) apply();
+      else img.addEventListener("load", apply, { once: true });
+    };
     const show = () => {
       slides.forEach((slide, i) => slide.classList.toggle("is-on", i === index));
       dots.forEach((dot, i) => dot.classList.toggle("is-on", i === index));
+      fit(slides[index]);
     };
     const start = () => {
       clearInterval(heroTimer);
