@@ -45,11 +45,20 @@
     return Number(value).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   }
 
+  function artFile(number) {
+    const file = String(number || "").split("/")[0].trim();
+    if (/^0+\d+$/.test(file)) return String(Number(file));
+    return file;
+  }
+
+  function plainArt(url) {
+    return String(url || "").replace(/\/0+(\d+)\.png(?=$|\?)/, (_, digits) => `/${Number(digits)}.png`);
+  }
+
   function imageOf(product) {
-    if (product.image) return product.image;
+    if (product.image) return plainArt(product.image);
     if (product.kind === "sealed" || !product.number) return "";
-    const number = String(product.number).split("/")[0];
-    return `https://images.pokemontcg.io/${product.set}/${number}.png`;
+    return `https://images.pokemontcg.io/${product.set}/${artFile(product.number)}.png`;
   }
 
   function numberLabel(number) {
@@ -76,7 +85,7 @@
 
   function shot(product) {
     const photo = imageOf(product);
-    if (photo) return `<img src="${esc(photo)}" alt="${esc(product.name)}" loading="lazy" width="245" height="342" />`;
+    if (photo) return `<img src="${esc(photo)}" alt="${esc(product.name)}" loading="lazy" width="245" height="342" onload="if(this.naturalWidth===640&&this.naturalHeight===892)this.hidden=true" onerror="this.hidden=true" />`;
     const set = setOf(product.set);
     return `<div class="pack"><img src="${I.sealed}" alt="" /><b>${esc(product.name)}</b><span>${esc(set.code)} · lacrado</span></div>`;
   }

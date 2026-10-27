@@ -58,18 +58,25 @@
     return `https://images.pokemontcg.io/${id}/logo.png`;
   }
 
+  function isCardBack(img) {
+    return img.naturalWidth === 640 && img.naturalHeight === 892;
+  }
+
   function fitSetImage(img) {
     const symbol = () => {
       if (img.dataset.symbol) { img.hidden = true; return; }
       img.dataset.symbol = "1";
-      img.src = img.src.replace("/logo.png", "/symbol.png");
+      const next = img.src.replace("/logo.png", "/symbol.png");
+      if (next === img.src) { img.hidden = true; return; }
+      img.src = next;
     };
-    img.onload = () => {
-      const card = img.naturalHeight > img.naturalWidth * 1.05;
-      if (!card) { img.hidden = false; return; }
-      symbol();
+    const check = () => {
+      if (!img.naturalWidth || isCardBack(img) || img.naturalHeight > img.naturalWidth * 1.05) symbol();
+      else img.hidden = false;
     };
+    img.onload = check;
     img.onerror = symbol;
+    if (img.complete) check();
   }
 
   function fold(value) {
@@ -174,7 +181,7 @@
         <input type="hidden" name="kind" value="${sealed ? "sealed" : "single"}" />
         ${search}
         <div class="photo-box">
-          ${preview ? `<img id="card-preview" class="card-preview" src="${esc(preview)}" alt="" />` : `<div id="card-preview" class="card-preview empty">Sem foto</div>`}
+          ${preview ? `<img id="card-preview" class="card-preview" src="${esc(preview)}" alt="" onload="if(this.naturalWidth===640&&this.naturalHeight===892)this.hidden=true" onerror="this.hidden=true" />` : `<div id="card-preview" class="card-preview empty">Sem foto</div>`}
           <div class="photo-actions">
             <label class="ghost photo-btn"><img src="/assets/icons/search.png" alt="" />Adicionar foto<input id="photo-file" type="file" accept="image/*" hidden /></label>
             <button class="ghost" type="button" id="photo-clear">Tirar foto</button>
@@ -214,11 +221,20 @@
     }
   }
 
+  function artFile(number) {
+    const file = String(number || "").split("/")[0].trim();
+    if (/^0+\d+$/.test(file)) return String(Number(file));
+    return file;
+  }
+
+  function plainArt(url) {
+    return String(url || "").replace(/\/0+(\d+)\.png(?=$|\?)/, (_, digits) => `/${Number(digits)}.png`);
+  }
+
   function thumb(product) {
-    if (product.image) return product.image;
+    if (product.image) return plainArt(product.image);
     if (product.kind === "sealed" || !product.number) return "";
-    const number = String(product.number).split("/")[0];
-    return `https://images.pokemontcg.io/${product.set_id}/${number}.png`;
+    return `https://images.pokemontcg.io/${product.set_id}/${artFile(product.number)}.png`;
   }
 
   function setName(id) {
@@ -242,7 +258,7 @@
       return `
         <div class="prow">
           <button class="prow-open" type="button" data-id="${esc(product.id)}">
-            ${image ? `<img class="thumb" src="${esc(image)}" alt="" />` : `<span class="thumb"></span>`}
+            ${image ? `<img class="thumb" src="${esc(image)}" alt="" onload="if(this.naturalWidth===640&&this.naturalHeight===892)this.hidden=true" onerror="this.hidden=true" />` : `<span class="thumb"></span>`}
             <span><strong>${esc(product.name)}</strong><span>${esc(setName(product.set_id))}${product.number ? " · " + esc(product.number) : ""} · ${product.qty} un.</span></span>
           </button>
           <div class="qty-step">
@@ -666,10 +682,10 @@ create policy "ler clientes" on public.customers for select to authenticated usi
   function autoArt() {
     const form = document.getElementById("editor");
     if (!form) return "";
-    const number = String(form.elements.number.value || "").split("/")[0];
     const setId = form.elements.set_id.value;
-    if (!number || !setId) return "";
-    return `https://images.pokemontcg.io/${setId}/${number}.png`;
+    const file = artFile(form.elements.number.value);
+    if (!file || !setId) return "";
+    return `https://images.pokemontcg.io/${setId}/${file}.png`;
   }
 
   function showPreview(src) {
@@ -680,7 +696,7 @@ create policy "ler clientes" on public.customers for select to authenticated usi
       return;
     }
     if (current.tagName === "IMG") current.src = src;
-    else current.outerHTML = `<img id="card-preview" class="card-preview" src="${esc(src)}" alt="" />`;
+    else current.outerHTML = `<img id="card-preview" class="card-preview" src="${esc(src)}" alt="" onload="if(this.naturalWidth===640&&this.naturalHeight===892)this.hidden=true" onerror="this.hidden=true" />`;
   }
 
   function readPhoto(file) {
@@ -980,7 +996,10 @@ create policy "ler clientes" on public.customers for select to authenticated usi
     box.innerHTML = `<p class="msg">Buscando lacrados…</p>`;
     try {
       const response = await fetch("/api/sealed?q=" + encodeURIComponent(query));
-      const payload = await response.json();
+      const text = await response.text();
+      let payload;
+      try { payload = JSON.parse(text); }
+      catch { throw new Error("Não foi possível consultar os lacrados."); }
       if (!response.ok) throw new Error(payload.error || "Não foi possível consultar os lacrados.");
       sealedItems = payload.items || [];
       if (!sealedItems.length) { box.innerHTML = `<p class="msg">Nenhum lacrado nessa coleção.</p>`; types.innerHTML = ""; return; }
@@ -1112,7 +1131,8 @@ create policy "ler clientes" on public.customers for select to authenticated usi
     if (!form.elements.finish.value || form.elements.finish.value === "Normal" || form.elements.finish.value === "Foil") {
       form.elements.finish.value = rare ? "Foil" : "Normal";
     }
-    if (!draftImage) showPreview(card.images.small);
+    draftImage = plainArt((card.images && (card.images.small || card.images.large)) || "");
+    showPreview(draftImage);
     document.getElementById("card-hits").innerHTML = "";
     const nameInput = document.getElementById("poke-name");
     const numberInput = document.getElementById("poke-number");

@@ -1,4 +1,4 @@
-import { searchSealed } from "../lib/sealed.mjs";
+import { searchSealed } from "./sealed-search.mjs";
 
 export default async function handler(req, res) {
   try {
