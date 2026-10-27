@@ -131,7 +131,7 @@
       <div class="login-wrap">
         <section class="login-card">
           <a class="brand" href="/">
-            <img src="/assets/logo-mark.png?v=9" alt="A.M.D TCG" width="140" height="96" />
+            <img src="/assets/logo-mark.png?v=10" alt="A.M.D TCG" width="140" height="96" />
           </a>
           <h1>Painel</h1>
           <p>Entre com o e-mail e a senha do administrador.</p>
@@ -276,7 +276,7 @@
       <div class="desk">
         <aside class="desk-side">
           <a class="brand" href="/admin">
-            <img src="/assets/logo-mark.png?v=9" alt="" width="76" height="76" />
+            <img src="/assets/logo-mark.png?v=10" alt="" width="76" height="76" />
             <span>A.M.D<small>Painel</small></span>
           </a>
           <nav class="desk-nav">
@@ -318,7 +318,7 @@
       <section class="panel">
         <h2>${units} ${units === 1 ? "unidade" : "unidades"} na vitrine</h2>
         <p>${low.length ? "Estoque baixo ou zerado:" : "Nenhum item com estoque baixo."}</p>
-        <div class="plist">${productRows(low)}</div>
+        <div class="plist" id="plist">${productRows(low)}</div>
         <div class="actions">
           <button class="solid" type="button" id="add-card">Adicionar carta</button>
           <button class="solid" type="button" id="add-product">Adicionar produto</button>
@@ -556,15 +556,14 @@ create policy "ler clientes" on public.customers for select to authenticated usi
     const setQuery = document.getElementById("set-q");
     const setResults = document.getElementById("set-results");
     if (setQuery && setResults) bindSetSearch(setQuery, setResults, (set) => { if (set) editSet(set.id); });
-    const list = document.getElementById("plist");
-    if (list) list.addEventListener("click", async (event) => {
+    if (!root.dataset.rows) {
+      root.dataset.rows = "1";
+      root.addEventListener("click", async (event) => {
       const removeBtn = event.target.closest("[data-remove]");
       if (removeBtn) {
+        event.preventDefault();
         const product = catalog.find((item) => item.id === removeBtn.dataset.remove);
-        if (product && confirm(`Excluir ${product.name}?`)) {
-          editing = product;
-          removeProduct();
-        }
+        if (product && confirm(`Excluir ${product.name}?`)) await removeProduct(product);
         return;
       }
       const step = event.target.closest("[data-qty]");
@@ -574,7 +573,8 @@ create policy "ler clientes" on public.customers for select to authenticated usi
       const product = catalog.find((item) => item.id === button.dataset.id);
       if (document.getElementById("editor-slot")) openEditor(product);
       else { view = "stock"; editing = product; await paintDesk(); }
-    });
+      });
+    }
     const query = document.getElementById("stock-q");
     if (query) query.addEventListener("input", () => {
       stockQuery = query.value;
@@ -1173,12 +1173,24 @@ create policy "ler clientes" on public.customers for select to authenticated usi
     if (!error) { editing = null; paintDesk(); }
   }
 
-  async function removeProduct() {
-    if (!editing) return;
-    const { error } = await sb.from("products").delete().eq("id", editing.id);
+  async function removeProduct(product) {
+    const item = product || editing;
+    if (!item || !sb) return;
     const msg = document.getElementById("desk-msg");
-    msg.textContent = error ? error.message : "Item apagado.";
-    if (!error) { editing = null; paintDesk(); }
+    const { data, error } = await sb.from("products").delete().eq("id", item.id).select("id");
+    if (error) {
+      if (msg) msg.textContent = error.message;
+      return;
+    }
+    if (!data || !data.length) {
+      if (msg) msg.textContent = "Não foi possível excluir esse item.";
+      return;
+    }
+    editing = null;
+    const slot = document.getElementById("editor-slot");
+    if (slot) slot.innerHTML = "";
+    if (msg) msg.textContent = "Item apagado.";
+    paintDesk();
   }
 
   async function paint() {

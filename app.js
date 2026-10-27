@@ -152,9 +152,9 @@
     return `
       <div class="hero">
         <div class="hero-rotator">
-          <img src="assets/banner.jpg?v=6" alt="Um novo site para os amantes de Pokémon" />
+          <img src="assets/banner.jpg?v=8" alt="Um novo site para os amantes de Pokémon" />
         <a href="#/cadastro" aria-label="Clientes cadastrados ganham 5% de desconto">
-          <img src="assets/banner-desconto.jpg?v=6" alt="" />
+          <img src="assets/banner-desconto.jpg?v=8" alt="" />
         </a>
         <a href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer" aria-label="AMD na Jamble, confira já">
           <img src="assets/banner-jamble.jpg?v=1" alt="" />
@@ -351,7 +351,7 @@
       main.innerHTML = `
         <div class="auth">
           <section class="auth-card">
-            <a class="brand" href="#/" aria-label="A.M.D TCG, início"><img src="assets/logo-mark.png?v=9" alt="" width="120" height="80" /></a>
+            <a class="brand" href="#/" aria-label="A.M.D TCG, início"><img src="assets/logo-mark.png?v=10" alt="" width="120" height="80" /></a>
             <h1 class="page-title">Criar conta</h1>
             <p class="lede">Cadastre-se e ganhe 5% de desconto.</p>
             <form class="form" id="signup">
@@ -375,7 +375,7 @@
       main.innerHTML = `
         <div class="auth">
           <section class="auth-card">
-            <a class="brand" href="#/" aria-label="A.M.D TCG, início"><img src="assets/logo-mark.png?v=9" alt="" width="120" height="80" /></a>
+            <a class="brand" href="#/" aria-label="A.M.D TCG, início"><img src="assets/logo-mark.png?v=10" alt="" width="120" height="80" /></a>
             <h1 class="page-title">Entrar</h1>
             <p class="lede">${user ? esc(user.name) + " · " + esc(user.email) : "Bem-vindo de volta."}</p>
             <form class="form" id="signin">
