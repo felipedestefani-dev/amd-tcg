@@ -55,6 +55,20 @@
     return `https://images.pokemontcg.io/${id}/logo.png`;
   }
 
+  function fitSetImage(img) {
+    const symbol = () => {
+      if (img.dataset.symbol) { img.hidden = true; return; }
+      img.dataset.symbol = "1";
+      img.src = img.src.replace("/logo.png", "/symbol.png");
+    };
+    img.onload = () => {
+      const card = img.naturalHeight > img.naturalWidth * 1.05;
+      if (!card) { img.hidden = false; return; }
+      symbol();
+    };
+    img.onerror = symbol;
+  }
+
   function setHits(query) {
     const text = query.trim().toLowerCase();
     if (!text) return [];
@@ -71,7 +85,7 @@
       if (!input.value.trim()) { box.hidden = true; box.innerHTML = ""; return; }
       box.hidden = false;
       box.innerHTML = found.length ? found.map(setHitHtml).join("") : `<p class="set-empty">Nenhuma coleção.</p>`;
-      box.querySelectorAll("img").forEach((img) => { img.onerror = () => img.remove(); });
+      box.querySelectorAll("img").forEach(fitSetImage);
       box.querySelectorAll("[data-set]").forEach((button) => {
         button.onclick = () => onPick(shop.sets.find((set) => set.id === button.dataset.set));
       });
@@ -662,8 +676,9 @@ create policy "ler visitas" on public.visits for select to authenticated using (
       chosenBox.hidden = false;
       const logo = chosenBox.querySelector("img");
       logo.hidden = false;
+      delete logo.dataset.symbol;
       logo.src = setLogo(set.id);
-      logo.onerror = () => { logo.hidden = true; };
+      fitSetImage(logo);
       chosenBox.querySelector("strong").textContent = set.name;
       pick.value = "";
       pick.hidden = true;
@@ -941,8 +956,9 @@ create policy "ler visitas" on public.visits for select to authenticated using (
       chosenBox.hidden = false;
       const logo = chosenBox.querySelector("img");
       logo.hidden = false;
+      delete logo.dataset.symbol;
       logo.src = setLogo(pickedSet.id);
-      logo.onerror = () => { logo.hidden = true; };
+      fitSetImage(logo);
       chosenBox.querySelector("strong").textContent = pickedSet.name;
       pick.value = "";
       pick.hidden = true;
