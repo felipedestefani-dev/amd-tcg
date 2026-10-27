@@ -442,12 +442,21 @@ button, input, select { font: inherit; color: inherit; }
 }
 
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   animation: rise 0.4s ease both;
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
 }
-.card:hover { border-color: #d4d4d8; }
+.card:hover {
+  z-index: 2;
+  border-color: #d4d4d8;
+  animation: none;
+  opacity: 1;
+  transform: scale(1.06);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.14);
+}
 .card-link { text-decoration: none; color: inherit; }
 .shot {
   position: relative;
@@ -634,6 +643,7 @@ body.has-cookie { padding-bottom: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; }
+  .card:hover { transform: none; animation: none; }
   .boot-track span { width: 100%; }
 }
 
