@@ -143,6 +143,7 @@
     return `
       <div class="hero">
         <div class="hero-rotator">
+          <img src="assets/banner-bemvindo.jpg?v=1" alt="Bem-vindo ao mundo do A.M.D TCG" />
           <img src="assets/banner.jpg?v=4" alt="Um novo site para os amantes de Pokémon" />
           <a href="#/cadastro" aria-label="Clientes cadastrados ganham 5% de desconto">
             <img src="assets/banner-desconto.jpg?v=4" alt="" />
@@ -151,6 +152,7 @@
         <div class="hero-dots">
           <button type="button" aria-label="Primeiro banner"></button>
           <button type="button" aria-label="Segundo banner"></button>
+          <button type="button" aria-label="Terceiro banner"></button>
         </div>
       </div>`;
   }
