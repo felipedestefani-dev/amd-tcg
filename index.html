@@ -7,7 +7,7 @@
   <meta name="description" content="Cartas avulsas e lacrados de Pokémon. A.M.D TCG." />
   <meta name="theme-color" content="#111111" />
   <link rel="icon" type="image/png" href="assets/logo-mark.png" />
-  <link rel="stylesheet" href="styles.css?v=32" />
+  <link rel="stylesheet" href="styles.css?v=33" />
 </head>
 <body>
   <div class="boot" id="boot" role="status" aria-live="polite" aria-label="Carregando">
@@ -35,7 +35,7 @@
         <svg class="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
         <span>Menu</span>
       </button>
-      <a class="ghost" href="#/cadastro">Criar conta</a>
+      <a class="ghost" id="criar" href="#/cadastro">Criar conta</a>
       <a class="solid" id="entrar" href="#/entrar">Entrar</a>
     </div>
   </header>
@@ -56,13 +56,26 @@
       <main id="conteudo"></main>
 
       <footer class="foot">
-        <p>Site desenvolvido por <a href="https://felipeseussites.vercel.app" target="_blank" rel="noopener noreferrer">Felipe</a></p>
+        <p>Site desenvolvido por <a class="credit" href="https://felipeseussites.vercel.app" target="_blank" rel="noopener noreferrer">Felipe</a></p>
+        <nav class="legal-nav" aria-label="Documentos">
+          <a href="#/privacidade">Privacidade</a>
+          <a href="#/cookies">Cookies</a>
+          <a href="#/termos">Termos de uso</a>
+        </nav>
       </footer>
     </div>
   </div>
 
+  <div class="cookie" id="cookie" hidden>
+    <p>A conta guarda só o necessário neste aparelho. Se você aceitar, a loja também registra a visita: página, IP e cidade.</p>
+    <a href="#/cookies">Ver cookies</a>
+    <div class="cookie-actions">
+      <button class="ghost" id="cookie-min" type="button">Só o necessário</button>
+      <button class="solid" id="cookie-all" type="button">Aceitar</button>
+    </div>
+  </div>
   <script src="catalog.js?v=4"></script>
   <script src="supabase.js"></script>
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

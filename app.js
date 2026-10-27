@@ -178,6 +178,7 @@
 
   const tracking = new Set();
   function trackVisit() {
+    if (localStorage.getItem("amd.cookies") !== "all") return;
     const path = location.hash || "#/";
     const seen = (sessionStorage.getItem("amd.tracked") || "").split("|").filter(Boolean);
     if (seen.includes(path) || tracking.has(path)) return;
@@ -242,6 +243,7 @@
   }
 
   function render() {
+    paintAccount();
     trackVisit();
     queueMicrotask(() => {
       spinHero();
@@ -302,6 +304,7 @@
     }
 
     if (name === "cadastro") {
+      if (loggedIn()) { location.hash = "#/"; return; }
       document.title = "Cadastro · A.M.D TCG";
       const user = account();
       main.innerHTML = `
@@ -344,6 +347,11 @@
           </section>
         </div>`;
       document.getElementById("signin").addEventListener("submit", onSignin);
+      return;
+    }
+
+    if (name === "privacidade" || name === "cookies" || name === "termos") {
+      main.innerHTML = legalPage(name);
       return;
     }
 
@@ -420,6 +428,100 @@
       ${shelf("loja-lacrados", "Lacrados", "Caixas e packs fechados de fábrica.", cards(sealed))}`;
   }
 
+  function legalPage(name) {
+    const updated = "27 de outubro de 2026";
+    const pages = {
+      privacidade: {
+        title: "Política de privacidade",
+        body: `
+          <p>Esta política explica o que a A.M.D TCG faz com os dados de quem usa a loja. Ela vale para o site e segue a Lei Geral de Proteção de Dados (Lei nº 13.709/2018).</p>
+          <h2>Quem é responsável</h2>
+          <p>A loja é a A.M.D TCG, do @allandomingues. Para falar sobre seus dados, chame no WhatsApp <a href="https://api.whatsapp.com/send?phone=5511969194152">11 96919-4152</a>.</p>
+          <h2>Quais dados usamos</h2>
+          <ul>
+            <li>Conta: nome, e-mail, telefone e senha. A senha fica protegida no serviço de acesso e a loja não vê a senha em texto aberto.</li>
+            <li>Pedido: ao tocar em Comprar, o WhatsApp abre com o produto, a coleção, o idioma, a condição, o acabamento e o preço. Essa conversa segue as regras do WhatsApp.</li>
+            <li>Visita, só se você aceitar: página vista, endereço IP e cidade aproximada, para saber quantas pessoas entram na loja.</li>
+            <li>Aparelho: a sessão da conta fica guardada neste navegador até você fechar a aba.</li>
+          </ul>
+          <h2>Para que serve</h2>
+          <ul>
+            <li>Criar a conta e aplicar o desconto de 5% enquanto você está dentro dela.</li>
+            <li>Montar a mensagem do pedido no WhatsApp.</li>
+            <li>Contar visitas, quando você aceita, para a loja entender o movimento do catálogo.</li>
+            <li>Manter o site no ar e proteger a conta contra uso indevido.</li>
+          </ul>
+          <h2>Base legal</h2>
+          <p>A conta e o pedido existem para atender a você. A visita com IP e cidade só acontece com o seu consentimento, que pode ser retirado. Dados estritamente necessários para a página abrir e para a sessão da conta se apoiam na execução do serviço.</p>
+          <h2>Com quem compartilhamos</h2>
+          <p>Não vendemos dados. O cadastro e as visitas aceitas ficam em banco de dados da Supabase. O site fica hospedado na Vercel. A cidade aproximada vem de uma consulta ao IP na ipwho.is. O pedido vai para o WhatsApp quando você toca em Comprar. Esses fornecedores podem guardar dados em servidores fora do Brasil. A loja usa isso só para o serviço descrito aqui.</p>
+          <h2>Por quanto tempo</h2>
+          <p>A conta fica enquanto você quiser mantê-la. As visitas ficam para a contagem da loja e podem ser apagadas quando você pedir. A sessão da aba some quando o navegador é fechado.</p>
+          <h2>Seus direitos</h2>
+          <p>Você pode pedir confirmação, acesso, correção, portabilidade, exclusão, informação sobre com quem os dados foram compartilhados e revogar o consentimento das visitas. O pedido é pelo WhatsApp da loja. A resposta sai em até 15 dias. Você também pode procurar a Autoridade Nacional de Proteção de Dados, em gov.br/anpd.</p>
+          <h2>Crianças e adolescentes</h2>
+          <p>A conta é para maiores de 18 anos. Menor de idade só deve se cadastrar com um responsável. A loja não pede dados de criança de propósito.</p>
+          <p>Atualizada em ${updated}.</p>`,
+      },
+      cookies: {
+        title: "Cookies e dados no aparelho",
+        body: `
+          <p>Este site não usa cookie de anúncio. O que fica no aparelho serve para a conta funcionar e, se você aceitar, para contar a visita.</p>
+          <h2>Necessários</h2>
+          <ul>
+            <li>Sessão da conta, para saber que você entrou e aplicar o desconto de 5% nesta aba.</li>
+            <li>Nome, e-mail e telefone do cadastro, para preencher a conta neste aparelho.</li>
+            <li>Sua escolha neste aviso: aceitar as visitas ou ficar só com o necessário.</li>
+          </ul>
+          <h2>Somente com aceite</h2>
+          <ul>
+            <li>Página visitada, endereço IP e cidade aproximada. Isso conta as pessoas que entram na loja. Sem o aceite, essa visita não é registrada.</li>
+          </ul>
+          <h2>Como mudar de ideia</h2>
+          <p>Apague os dados deste site nas configurações do navegador. Na próxima visita o aviso aparece de novo e você escolhe outra vez. Para apagar o que já foi salvo na loja, chame no WhatsApp <a href="https://api.whatsapp.com/send?phone=5511969194152">11 96919-4152</a>.</p>
+          <p>Atualizada em ${updated}.</p>`,
+      },
+      termos: {
+        title: "Termos de uso",
+        body: `
+          <p>Ao usar o site da A.M.D TCG você vê o catálogo e, se quiser, pede um item pelo WhatsApp. Comprar no botão abre a conversa com a loja. O pedido se fecha nessa conversa, não aqui no site.</p>
+          <h2>Catálogo e preço</h2>
+          <p>Preço, quantidade e condição são os que estão na ficha no momento. O item pode acabar antes da confirmação. Quem está dentro da conta vê 5% de desconto nos preços do site. O valor final, o frete e a reserva são combinados no WhatsApp.</p>
+          <h2>Conta</h2>
+          <p>Os dados do cadastro precisam ser seus. A senha é sua responsabilidade. A loja pode recusar cadastro com informação falsa ou uso que atrapalhe o site e os outros clientes.</p>
+          <h2>O que não fazer</h2>
+          <ul>
+            <li>Usar o site para golpe, spam ou para pegar dados de outra pessoa.</li>
+            <li>Tentar invadir, copiar em massa ou quebrar o catálogo.</li>
+            <li>Publicar o conteúdo da loja como se fosse seu.</li>
+          </ul>
+          <h2>Marcas</h2>
+          <p>Pokémon e as marcas das cartas pertencem aos seus donos. A A.M.D TCG é uma loja independente e não é a Pokémon Company, a Nintendo nem a The Pokémon Company International.</p>
+          <h2>Limite</h2>
+          <p>O site mostra o que está disponível. Atraso de operadora, falta de estoque ou instabilidade do WhatsApp não geram compra automática. A lei brasileira vale para estes termos.</p>
+          <p>Dúvida ou pedido sobre estes termos: WhatsApp <a href="https://api.whatsapp.com/send?phone=5511969194152">11 96919-4152</a>.</p>
+          <p>Atualizado em ${updated}.</p>`,
+      },
+    };
+    const page = pages[name];
+    document.title = `${page.title} · A.M.D TCG`;
+    return `<article class="legal"><h1 class="page-title">${page.title}</h1>${page.body}</article>`;
+  }
+
+  function bindCookies() {
+    const bar = document.getElementById("cookie");
+    if (!bar) return;
+    const choice = localStorage.getItem("amd.cookies");
+    bar.hidden = Boolean(choice);
+    const pick = (value) => {
+      localStorage.setItem("amd.cookies", value);
+      bar.hidden = true;
+      if (value === "all") trackVisit();
+    };
+    document.getElementById("cookie-all").onclick = () => pick("all");
+    document.getElementById("cookie-min").onclick = () => pick("essential");
+  }
+
   async function onSignup(event) {
     event.preventDefault();
     const form = new FormData(event.target);
@@ -478,9 +580,16 @@
   function paintAccount() {
     const user = account();
     const link = document.getElementById("entrar");
-    const on = sessionStorage.getItem("amd.session");
+    const signup = document.getElementById("criar");
+    const menuSignup = document.querySelector('#nav a[href="#/cadastro"]');
+    const on = loggedIn();
+    if (signup) signup.hidden = on;
+    if (menuSignup) menuSignup.hidden = on;
     if (user && on) {
       link.textContent = user.name.split(" ")[0];
+      link.href = "#/";
+    } else {
+      link.textContent = "Entrar";
       link.href = "#/entrar";
     }
   }
@@ -598,6 +707,7 @@
   loadRemote().finally(() => {
     fillSets();
     paintAccount();
+    bindCookies();
     render();
   });
 })();
