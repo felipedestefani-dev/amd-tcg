@@ -143,7 +143,7 @@
     return `
       <div class="hero">
         <div class="hero-rotator">
-          <img src="assets/banner-bemvindo.jpg?v=2" alt="Booster box, packs e cartas avulsas" />
+          <img src="assets/banner-bemvindo.jpg?v=3" alt="Bem-vindo ao mundo do A.M.D TCG" />
           <img src="assets/banner.jpg?v=4" alt="Um novo site para os amantes de Pokémon" />
           <a href="#/cadastro" aria-label="Clientes cadastrados ganham 5% de desconto">
             <img src="assets/banner-desconto.jpg?v=4" alt="" />
