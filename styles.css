@@ -201,7 +201,7 @@ button, input, select { font: inherit; color: inherit; }
   font-weight: 600;
   font-size: 0.95rem;
 }
-.menu a[hidden],
+.menu a img { width: 18px; height: 18px; max-width: 18px; object-fit: contain; flex: none; }
 #criar[hidden],
 #sair[hidden] { display: none; }
 .menu a[aria-current="page"] { background: #fff; color: var(--ink); }
