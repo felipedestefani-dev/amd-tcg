@@ -55,7 +55,7 @@
   }
 
   function waLink(product) {
-    return "https://api.whatsapp.com/send?text=" + encodeURIComponent(orderText(product));
+    return "https://api.whatsapp.com/send?phone=" + shop.whatsapp + "&text=" + encodeURIComponent(orderText(product));
   }
 
   function shot(product) {

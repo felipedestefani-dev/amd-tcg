@@ -2,6 +2,7 @@
 window.AMD_SHOP = {
   name: "A.M.D TCG",
   handle: "@allandomingues",
+  whatsapp: "5511969194152",
   whatsappGroup: "https://chat.whatsapp.com/HLYawCBOc6K7rlIkm5wyVz",
   jamble: "https://www.jamble.com/u/allandomingues",
   jambleInvite: "https://www.jamble.com/invite/buyer/allandomingues",
