@@ -257,7 +257,7 @@
   }
 
   function shell(title, lede, body) {
-    const item = (id, label, icon) => `<button type="button" data-view="${id}" class="${view === id ? "is-on" : ""}"><img src="${icon}" alt="" />${label}</button>`;
+    const item = (id, label, short, icon) => `<button type="button" data-view="${id}" class="${view === id ? "is-on" : ""}"><img src="${icon}" alt="" /><span class="nav-label">${label}</span><span class="nav-short">${short}</span></button>`;
     return `
       <div class="desk">
         <aside class="desk-side">
@@ -266,12 +266,12 @@
             <span>A.M.D<small>Painel</small></span>
           </a>
           <nav class="desk-nav">
-            ${item("home", "Visão geral", "/assets/icons/home.png")}
-            ${item("stock", "Vitrine", "/assets/icons/cards.png")}
-            ${item("estoque", "Estoque", "/assets/icons/sealed.png")}
-            ${item("sets", "Coleções", "/assets/icons/sets.png")}
-            ${item("visits", "Visitas", "/assets/icons/search.png")}
-            ${item("clients", "Clientes", "/assets/icons/visits-people.svg")}
+            ${item("home", "Visão geral", "Início", "/assets/icons/home.png")}
+            ${item("stock", "Vitrine", "Vitrine", "/assets/icons/cards.png")}
+            ${item("estoque", "Estoque", "Estoque", "/assets/icons/sealed.png")}
+            ${item("sets", "Coleções", "Coleções", "/assets/icons/sets.png")}
+            ${item("visits", "Visitas", "Visitas", "/assets/icons/search.png")}
+            ${item("clients", "Clientes", "Clientes", "/assets/icons/visits-people.svg")}
           </nav>
           <div class="desk-tools">
             <button class="ghost" type="button" id="sair">Sair</button>
