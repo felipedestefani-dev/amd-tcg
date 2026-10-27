@@ -54,7 +54,12 @@ body {
   font-size: 16px;
   line-height: 1.45;
   color: var(--text);
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(rgba(17, 17, 17, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 17, 17, 0.055) 1px, transparent 1px);
+  background-size: 22px 22px;
+  background-attachment: fixed;
 }
 
 img { max-width: 100%; display: block; }
@@ -457,14 +462,12 @@ button, input, select { font: inherit; color: inherit; }
     transparent 100%
   );
   transform: translateX(-20%) rotate(8deg);
-  animation: card-shine 3.6s ease-in-out infinite;
+  animation: card-shine 2.2s ease-in-out infinite;
   pointer-events: none;
 }
-.card:nth-child(2n) .shot::after { animation-delay: 0.7s; }
-.card:nth-child(3n) .shot::after { animation-delay: 1.3s; }
 @keyframes card-shine {
-  0%, 42% { transform: translateX(-30%) rotate(8deg); }
-  72%, 100% { transform: translateX(320%) rotate(8deg); }
+  0%, 18% { transform: translateX(-30%) rotate(8deg); }
+  62%, 100% { transform: translateX(320%) rotate(8deg); }
 }
 .pack {
   height: 100%;

@@ -160,27 +160,38 @@
     return `<h1 class="page-title">${esc(title)}</h1><p class="lede">${esc(lede)}</p>${body}`;
   }
 
+  const tracking = new Set();
   function trackVisit() {
     const path = location.hash || "#/";
-    const seen = (sessionStorage.getItem("amd.seen") || "").split("|").filter(Boolean);
-    if (seen.includes(path)) return;
-    sessionStorage.setItem("amd.seen", seen.concat(path).join("|"));
-    const visitor = localStorage.getItem("amd.visitor") || crypto.randomUUID();
-    localStorage.setItem("amd.visitor", visitor);
-    const send = (city) => {
-      window.AMD_SB.client().then((sb) => {
-        if (sb) sb.from("visits").insert({ path, visitor, city: city || "" });
-      }).catch(() => {});
+    const seen = (sessionStorage.getItem("amd.tracked") || "").split("|").filter(Boolean);
+    if (seen.includes(path) || tracking.has(path)) return;
+    tracking.add(path);
+    const localId = localStorage.getItem("amd.visitor") || crypto.randomUUID();
+    localStorage.setItem("amd.visitor", localId);
+    let sent = false;
+    const send = (visitor, city) => {
+      if (sent) return;
+      sent = true;
+      window.AMD_SB.client().then(async (sb) => {
+        if (!sb) { sent = false; tracking.delete(path); return; }
+        const { error } = await sb.from("visits").insert({ path, visitor, city: city || "" });
+        if (error) { sent = false; tracking.delete(path); return; }
+        sessionStorage.setItem("amd.tracked", seen.concat(path).join("|"));
+      }).catch(() => { sent = false; tracking.delete(path); });
     };
-    const cached = sessionStorage.getItem("amd.city");
-    if (cached !== null) { send(cached); return; }
+    const cachedIp = sessionStorage.getItem("amd.ip");
+    if (cachedIp) { send(cachedIp, sessionStorage.getItem("amd.city") || ""); return; }
+    const timer = setTimeout(() => send(localId, ""), 2000);
     fetch("https://ipwho.is/").then((response) => response.json()).then((geo) => {
+      clearTimeout(timer);
       const city = geo && geo.city ? [geo.city, geo.region_code || geo.region].filter(Boolean).join(" — ") : "";
+      const ip = geo && geo.ip ? String(geo.ip) : "";
       sessionStorage.setItem("amd.city", city);
-      send(city);
+      if (ip) sessionStorage.setItem("amd.ip", ip);
+      send(ip || localId, city);
     }).catch(() => {
-      sessionStorage.setItem("amd.city", "");
-      send("");
+      clearTimeout(timer);
+      send(localId, "");
     });
   }
 

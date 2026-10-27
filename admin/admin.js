@@ -441,6 +441,12 @@ create policy "ler visitas" on public.visits for select to authenticated using (
         <section class="panel">
           <h2 class="with-icon"><img src="/assets/icons/visits-city.svg" alt="" />Cidades</h2>
           ${cityRows.map(([city, count]) => `<div class="rank"><span>${esc(city)}</span><strong>${count}</strong><small>${rows.length ? Math.round(count / rows.length * 100) : 0}%</small><i style="width:${Math.round(count / cityMax * 100)}%"></i></div>`).join("") || `<p class="empty">Sem cidades.</p>`}
+          <h2 class="with-icon">Últimos IPs</h2>
+          ${rows.slice(0, 6).map((visit) => {
+            const when = new Date(visit.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+            const ip = /^\d{1,3}(\.\d{1,3}){3}$/.test(visit.visitor || "") || String(visit.visitor || "").includes(":") ? visit.visitor : "Sem IP";
+            return `<div class="rank"><span>${esc(ip)}</span><strong>${esc(visit.city || "—")}</strong><small>${esc(when)}</small></div>`;
+          }).join("") || `<p class="empty">Nenhum acesso.</p>`}
         </section>
       </div>`);
   }
