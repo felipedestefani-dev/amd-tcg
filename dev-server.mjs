@@ -46,8 +46,9 @@ const server = http.createServer(async (req, res) => {
 
   if (url.pathname === "/api/tcg") {
     const q = url.searchParams.get("q") || "";
-    const pageSize = Math.min(Math.max(Number(url.searchParams.get("pageSize")) || 12, 1), 200);
-    const target = "https://api.pokemontcg.io/v2/cards?pageSize=" + pageSize + "&select=id,name,number,rarity,set,images&q=" + encodeURIComponent(q);
+    const pageSize = Math.min(Math.max(Number(url.searchParams.get("pageSize")) || 12, 1), 250);
+    const page = Math.max(Number(url.searchParams.get("page")) || 1, 1);
+    const target = "https://api.pokemontcg.io/v2/cards?page=" + page + "&pageSize=" + pageSize + "&select=id,name,number,rarity,set,images&q=" + encodeURIComponent(q);
     try {
       const response = await fetch(target, { headers: { Accept: "application/json", "User-Agent": "AMD-TCG/1.0" } });
       const body = await response.text();

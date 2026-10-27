@@ -3,8 +3,9 @@ export default async function handler(req, res) {
     const url = new URL(req.url || "/", "https://amdtcg.vercel.app");
     const q = (req.query && req.query.q) || url.searchParams.get("q") || "";
     const rawSize = (req.query && req.query.pageSize) || url.searchParams.get("pageSize");
-    const pageSize = Math.min(Math.max(Number(rawSize) || 12, 1), 200);
-    const target = "https://api.pokemontcg.io/v2/cards?pageSize=" + pageSize + "&select=id,name,number,rarity,set,images&q=" + encodeURIComponent(q);
+    const pageSize = Math.min(Math.max(Number(rawSize) || 12, 1), 250);
+    const page = Math.max(Number((req.query && req.query.page) || url.searchParams.get("page")) || 1, 1);
+    const target = "https://api.pokemontcg.io/v2/cards?page=" + page + "&pageSize=" + pageSize + "&select=id,name,number,rarity,set,images&q=" + encodeURIComponent(q);
     const response = await fetch(target, {
       headers: { Accept: "application/json", "User-Agent": "AMD-TCG/1.0" },
     });

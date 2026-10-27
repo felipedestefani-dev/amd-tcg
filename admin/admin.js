@@ -150,9 +150,9 @@
         <label>Produto<input id="sealed-q" type="search" placeholder="Coleção, ex. Evoluções Prismáticas" autocomplete="off" /></label>
         <div id="sealed-types" class="name-picks"></div>
         <div id="sealed-hits" class="print-grid"></div>` : `
-        <label>Nome<input id="poke-name" type="search" placeholder="Ex. Charizard" autocomplete="off" /></label>
+        <label>Nome<input id="poke-name" type="search" placeholder="Ex. Charizard V do Lance" autocomplete="off" /></label>
         <div id="poke-names" class="name-picks"></div>
-        <label>Número<input id="poke-number" type="search" placeholder="Número da carta" autocomplete="off" /></label>
+        <label>Número<input id="poke-number" type="search" placeholder="Número ou código, ex. SWSH133" autocomplete="off" /></label>
         <div id="card-hits" class="print-grid"></div>`;
     const specifics = sealed ? `
         <input type="hidden" name="number" value="${esc(p.number)}" />
@@ -772,9 +772,44 @@ create policy "ler visitas" on public.visits for select to authenticated using (
     return card.set.printedTotal === total || card.set.total === total;
   }
 
+  function setLabel(card) {
+    const known = shop.sets.find((set) => set.id === card.set?.id);
+    if (card.set?.id === "swshp") return "Promo SWSH";
+    return known?.name || card.set?.name || "Promo";
+  }
+
   function ligaNumber(card) {
+    const number = String(card.number || "").trim();
+    if (!number) return "Sem número";
+    if (/^(SWSH|SM|XY|BW|DP|HGSS)/i.test(number) || (String(card.set?.id || "").endsWith("p") && !/^\d+$/.test(number))) return number.toUpperCase();
     const total = card.set.printedTotal || card.set.total;
-    return total ? `${card.number}/${total}` : String(card.number);
+    return total ? `${number}/${total}` : number;
+  }
+
+  function foldText(text) {
+    return String(text || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/shw/g, "swsh");
+  }
+
+  function searchTokens(text) {
+    const raw = foldText(text);
+    const code = (raw.match(/\b((?:swsh|sm|sv|xy|bw|dp)\s*-?\s*\d{2,4}[a-z]?)\b/) || [])[1];
+    const filler = new Set(["do", "da", "de", "dos", "das", "o", "a", "the", "of"]);
+    const words = raw.replace(/[^a-z0-9]+/g, " ").split(/\s+/).filter((word) => word && !filler.has(word));
+    const base = words.find((word) => word.length > 1 && !/^(swsh|sm|sv|xy|bw|dp)\d/.test(word) && !/^\d+$/.test(word)) || "";
+    return { promoCode: code ? code.replace(/[\s-]/g, "").toUpperCase() : "", words, base };
+  }
+
+  function cardMatches(card, tokens) {
+    const set = card.set || {};
+    const promo = String(set.id || "").endsWith("p") || /promo/i.test(set.name || "");
+    const hay = foldText([card.name, card.number, set.name, set.id, set.ptcgoCode, promo ? "promo" : ""].join(" "));
+    const nameWords = foldText(card.name).split(/[^a-z0-9]+/).filter(Boolean);
+    return tokens.words.every((word) => {
+      if (word === "swsh") return foldText(card.number || "").startsWith("swsh") || set.id === "swshp";
+      if (word === "promo" || /^(swsh|sm|sv|xy|bw|dp)\d/.test(word)) return hay.includes(word);
+      if (word.length <= 3) return nameWords.includes(word);
+      return hay.includes(word);
+    });
   }
 
   function tcgQuery(parsed, number, withPrinted) {
@@ -786,13 +821,31 @@ create policy "ler visitas" on public.visits for select to authenticated using (
     return parts.join(" ");
   }
 
-  async function fetchCards(q, pageSize) {
-    const sizes = [pageSize || 30, 20].filter((size, index, list) => list.indexOf(size) === index);
-    for (const size of sizes) {
-      const response = await fetch("/api/tcg?pageSize=" + size + "&q=" + encodeURIComponent(q));
+  async function fetchCards(q, pageSize, page) {
+    const size = pageSize || 30;
+    const pageNo = page || 1;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const response = await fetch("/api/tcg?page=" + pageNo + "&pageSize=" + size + "&q=" + encodeURIComponent(q));
       if (!response.ok) continue;
       const payload = await response.json();
-      return payload.data || [];
+      if (Array.isArray(payload.data)) return payload.data;
+    }
+    return null;
+  }
+
+  async function fetchNamedCards(q) {
+    for (const size of [100, 50]) {
+      const first = await fetchCards(q, size, 1);
+      if (!first) continue;
+      let all = first;
+      let page = 1;
+      while (all.length === page * size && page < 4) {
+        page += 1;
+        const more = await fetchCards(q, size, page);
+        if (!more?.length) break;
+        all = all.concat(more);
+      }
+      return all;
     }
     return null;
   }
@@ -802,14 +855,20 @@ create policy "ler visitas" on public.visits for select to authenticated using (
     const raw = text.trim().replace(/"/g, "");
     if (raw.length < 2) { box.innerHTML = ""; nameCards = []; return; }
     box.innerHTML = `<p class="msg">Buscando nomes…</p>`;
-    const cards = await fetchCards("name:" + raw.toLowerCase(), 50);
+    const tokens = searchTokens(raw);
+    if (!tokens.base && !tokens.promoCode) { box.innerHTML = `<p class="msg">Digite o nome da carta.</p>`; return; }
+    const query = tokens.base ? "name:" + tokens.base : "number:" + tokens.promoCode;
+    const cards = tokens.base ? await fetchNamedCards(query) : await fetchCards(query, 30, 1);
     if (!cards) { box.innerHTML = `<p class="msg">Não foi possível consultar o catálogo.</p>`; return; }
-    nameCards = cards;
-    const needle = raw.toLowerCase();
-    const names = [...new Set(cards.map((card) => card.name))].sort((a, b) => {
-      const rank = (name) => name.toLowerCase().startsWith(needle) ? 0 : 1;
+    nameCards = cards.filter((card) => cardMatches(card, tokens));
+    const needle = foldText(raw);
+    const names = [...new Set(nameCards.map((card) => card.name))].sort((a, b) => {
+      const rank = (name) => {
+        const folded = foldText(name);
+        return (folded.startsWith(needle) ? 0 : 1) + (tokens.words.every((word) => folded.includes(word)) ? 0 : 2);
+      };
       return rank(a) - rank(b) || a.localeCompare(b, "pt");
-    }).slice(0, 30);
+    }).slice(0, 40);
     if (!names.length) { box.innerHTML = `<p class="msg">Nenhum Pokémon com esse nome.</p>`; return; }
     box.innerHTML = names.map((name) => `<button type="button" data-name="${esc(name)}">${esc(name)}</button>`).join("");
     box.querySelectorAll("[data-name]").forEach((button) => {
@@ -834,19 +893,19 @@ create policy "ler visitas" on public.visits for select to authenticated using (
   function renderPrintings() {
     const box = document.getElementById("card-hits");
     if (!box) return;
-    const typed = (document.getElementById("poke-number")?.value || "").trim().toLowerCase();
+    const typed = foldText(document.getElementById("poke-number")?.value || "");
     const list = printings.filter((card) => {
       if (!typed) return true;
-      const printed = ligaNumber(card).toLowerCase();
-      return printed.includes(typed) || String(card.number).toLowerCase().includes(typed) || card.set.name.toLowerCase().includes(typed);
-    }).slice(0, 24);
+      const printed = foldText(ligaNumber(card) + " " + (card.number || "") + " " + setLabel(card));
+      return printed.includes(typed);
+    }).sort((a, b) => String(b.set?.releaseDate || "").localeCompare(String(a.set?.releaseDate || ""))).slice(0, 36);
     if (!printings.length) { box.innerHTML = `<p class="msg">Nenhuma carta com esse nome.</p>`; return; }
     if (!list.length) { box.innerHTML = `<p class="msg">Nenhuma carta com esse número.</p>`; return; }
     box.innerHTML = list.map((card, index) => `
       <button type="button" data-print="${index}">
         <img src="${esc(card.images.small)}" alt="" />
         <strong>${esc(ligaNumber(card))}</strong>
-        <span>${esc(card.set.name)}</span>
+        <span>${esc(setLabel(card))}</span>
       </button>`).join("");
     box.querySelectorAll("[data-print]").forEach((button) => {
       button.onclick = () => applyCard(list[Number(button.dataset.print)]);
