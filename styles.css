@@ -567,13 +567,15 @@ button, input, select { font: inherit; color: inherit; }
 .cookie {
   position: fixed;
   z-index: 35;
-  right: 1rem;
+  right: auto;
   bottom: 1rem;
-  left: auto;
+  left: 50%;
+  transform: translateX(-50%);
   width: min(360px, calc(100vw - 2rem));
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: center;
+  text-align: center;
   gap: 0.65rem;
   padding: 0.9rem 1rem;
   background: #fff;
