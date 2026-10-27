@@ -46,7 +46,7 @@
     const set = setOf(product.set);
     const code = product.number ? ` ${numberLabel(product.number)}` : "";
     return [
-      "Olá, vi a vitrine da A.M.D TCG e quero reservar:",
+      "Olá! Quero reservar:",
       `${product.name}${code}`,
       `${set.name} · ${product.lang} · ${product.condition} · ${product.finish}`,
       money(product.price),
@@ -150,7 +150,7 @@
   function listPage(title, lede, items) {
     const body = items.length
       ? `<div class="grid">${items.map(cardHtml).join("")}</div>`
-      : `<p class="empty">Nada com esse filtro.</p>`;
+      : `<p class="empty">Nenhum item por aqui.</p>`;
     return `<h1 class="page-title">${esc(title)}</h1><p class="lede">${esc(lede)}</p>${body}`;
   }
 
@@ -224,7 +224,7 @@
     if (name === "carta") {
       const product = shop.products.find((item) => item.id === id);
       if (!product) {
-        main.innerHTML = `<p class="empty">Essa carta saiu da vitrine.</p>`;
+        main.innerHTML = `<p class="empty">Esse item não está mais disponível.</p>`;
         return;
       }
       const set = setOf(product.set);
@@ -247,7 +247,7 @@
               <tr><th>Quantidade</th><td>${product.qty} un.</td></tr>
             </table>
             <a class="ask" href="${esc(waLink(product))}" target="_blank" rel="noopener noreferrer"><img src="${I.buy}" alt="" />Comprar</a>
-            <p class="note">Comprar abre o WhatsApp com o texto do pedido. Confira a unidade antes de pagar. Frete e reserva são combinados na conversa. Não há pagamento neste site.</p>
+            <p class="note">Frete combinado no pedido.</p>
           </div>
         </article>`;
       return;
@@ -261,7 +261,7 @@
           <section class="auth-card">
             <a class="brand" href="#/" aria-label="A.M.D TCG, início"><img src="assets/logo-mark.png?v=8" alt="" width="120" height="80" /></a>
             <h1 class="page-title">Criar conta</h1>
-            <p class="lede">A compra continua no WhatsApp. O cadastro guarda seu contato.</p>
+            <p class="lede">Cadastre-se e ganhe 5% de desconto.</p>
             <form class="form" id="signup">
               <label>Nome<input name="name" required value="${esc(user?.name || "")}" autocomplete="name" /></label>
               <label>E-mail<input name="email" type="email" required value="${esc(user?.email || "")}" autocomplete="email" /></label>
@@ -285,7 +285,7 @@
           <section class="auth-card">
             <a class="brand" href="#/" aria-label="A.M.D TCG, início"><img src="assets/logo-mark.png?v=8" alt="" width="120" height="80" /></a>
             <h1 class="page-title">Entrar</h1>
-            <p class="lede">${user ? esc(user.name) + " · " + esc(user.email) : "Use o e-mail e a senha do cadastro."}</p>
+            <p class="lede">${user ? esc(user.name) + " · " + esc(user.email) : "Bem-vindo de volta."}</p>
             <form class="form" id="signin">
               <label>E-mail<input name="email" type="email" required value="${esc(user?.email || "")}" autocomplete="email" /></label>
               <label>Senha<input name="password" type="password" required autocomplete="current-password" /></label>
@@ -303,11 +303,11 @@
       document.title = "Contato · A.M.D TCG";
       main.innerHTML = `
         <h1 class="page-title">Contato</h1>
-        <p class="lede">Pedido, frete e reserva são combinados na conversa.</p>
+        <p class="lede">Grupo, lives e convite.</p>
         <div class="sets">
           <a class="set-link" href="${esc(shop.whatsappGroup)}" target="_blank" rel="noopener noreferrer"><strong>Grupo do WhatsApp</strong><span>Abrir</span></a>
           <a class="set-link" href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer"><strong>Lives na Jamble</strong><span>@allandomingues</span></a>
-          <a class="set-link" href="${esc(shop.jambleInvite)}" target="_blank" rel="noopener noreferrer"><strong>Convite Jamble</strong><span>R$ 75</span></a>
+          <a class="set-link" href="${esc(shop.jambleInvite)}" target="_blank" rel="noopener noreferrer"><strong>Ganhe R$ 75 na Jamble</strong><span>Convite</span></a>
         </div>`;
       return;
     }
@@ -316,18 +316,18 @@
       document.title = "Sobre · A.M.D TCG";
       main.innerHTML = `
         <h1 class="page-title">Sobre</h1>
-        <p class="lede">A.M.D TCG é a vitrine de Pokémon de @allandomingues. Avulsos e lacrados, com condição e idioma na ficha. Não há pagamento no site: Comprar abre o WhatsApp com o item escrito.</p>`;
+        <p class="lede">Loja de Pokémon TCG do @allandomingues. Cartas avulsas e lacrados para quem coleciona e joga.</p>`;
       return;
     }
 
     if (name === "avulsos") {
       document.title = "Avulsos · A.M.D TCG";
-      main.innerHTML = listPage("Avulsos", "Cartas soltas. A ficha diz condição, idioma e acabamento.", shop.products.filter((p) => p.kind === "single"));
+      main.innerHTML = listPage("Avulsos", "Unidades escolhidas uma a uma.", shop.products.filter((p) => p.kind === "single"));
       return;
     }
     if (name === "lacrados") {
       document.title = "Lacrados · A.M.D TCG";
-      main.innerHTML = listPage("Lacrados", "Caixa e pack fechados de fábrica. Comprar abre o WhatsApp.", shop.products.filter((p) => p.kind === "sealed"));
+      main.innerHTML = listPage("Lacrados", "Caixas e packs fechados de fábrica.", shop.products.filter((p) => p.kind === "sealed"));
       return;
     }
     if (name === "colecoes") {
@@ -336,7 +336,7 @@
         const count = shop.products.filter((product) => product.set === set.id).length;
         return `<a class="set-link" href="#/set/${esc(set.id)}"><strong>${esc(set.name)}</strong><span>${esc(set.code)} · ${count}</span></a>`;
       }).join("");
-      main.innerHTML = `<h1 class="page-title">Coleções</h1><p class="lede">O que está na vitrine agora, por coleção.</p><div class="sets">${rows}</div>`;
+      main.innerHTML = `<h1 class="page-title">Coleções</h1><p class="lede">O estoque separado por coleção.</p><div class="sets">${rows}</div>`;
       return;
     }
     if (name === "set") {
@@ -355,20 +355,20 @@
     const sealed = shop.products.filter((product) => product.kind === "sealed");
     const cards = (items) => items.length
       ? `<div class="grid">${items.map(cardHtml).join("")}</div>`
-      : `<p class="empty">Nada por aqui ainda.</p>`;
+      : `<p class="empty">Nenhum item no momento.</p>`;
     const sets = shop.sets.map((set) => {
       const count = shop.products.filter((product) => product.set === set.id).length;
       return `<a class="set-link" href="#/set/${esc(set.id)}"><strong>${esc(set.name)}</strong><span>${esc(set.code)} · ${count}</span></a>`;
-    }).join("") || `<p class="empty">Nenhuma coleção ainda.</p>`;
+    }).join("") || `<p class="empty">Nenhuma coleção no momento.</p>`;
     main.innerHTML = banner() + `
       <nav class="jumps" aria-label="Seções do catálogo">
         <button type="button" data-jump="loja-avulsos">Avulsos<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
         <button type="button" data-jump="loja-lacrados">Lacrados<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
         <button type="button" data-jump="loja-colecoes">Coleções<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
       </nav>
-      ${shelf("loja-avulsos", "Avulsos", "Cartas soltas. A ficha diz condição, idioma e acabamento.", cards(singles))}
-      ${shelf("loja-lacrados", "Lacrados", "Caixa e pack fechados de fábrica.", cards(sealed))}
-      ${shelf("loja-colecoes", "Coleções", "O que está na vitrine agora, por coleção.", `<div class="sets">${sets}</div>`)}`;
+      ${shelf("loja-avulsos", "Avulsos", "Unidades escolhidas uma a uma.", cards(singles))}
+      ${shelf("loja-lacrados", "Lacrados", "Caixas e packs fechados de fábrica.", cards(sealed))}
+      ${shelf("loja-colecoes", "Coleções", "O estoque separado por coleção.", `<div class="sets">${sets}</div>`)}`;
   }
 
   async function onSignup(event) {
