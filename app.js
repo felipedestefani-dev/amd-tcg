@@ -143,7 +143,7 @@
     return `
       <div class="hero">
         <div class="hero-rotator">
-          <img src="assets/banner.jpg?v=4" alt="Um novo site para os amantes de Pokémon" />
+          <img src="assets/banner.jpg?v=5" alt="Um novo site para os amantes de Pokémon" />
         <a href="#/cadastro" aria-label="Clientes cadastrados ganham 5% de desconto">
           <img src="assets/banner-desconto.jpg?v=4" alt="" />
         </a>
@@ -224,13 +224,29 @@
     const slides = [...box.children];
     const dots = [...document.querySelectorAll(".hero-dots button")];
     let index = 0;
+    const fill = (img) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 2;
+      canvas.height = 1;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      const sample = 40;
+      const y = Math.max(0, Math.floor(img.naturalHeight / 2 - sample / 2));
+      ctx.drawImage(img, 0, y, 1, sample, 0, 0, 1, 1);
+      ctx.drawImage(img, img.naturalWidth - 1, y, 1, sample, 1, 0, 1, 1);
+      const hex = (x) => {
+        const p = ctx.getImageData(x, 0, 1, 1).data;
+        return "#" + [p[0], p[1], p[2]].map((n) => n.toString(16).padStart(2, "0")).join("");
+      };
+      const left = hex(0);
+      const right = hex(1);
+      box.style.background = `linear-gradient(90deg, ${left}, ${right})`;
+    };
     const fit = (slide) => {
       const img = slide.tagName === "IMG" ? slide : slide.querySelector("img");
       if (!img) return;
       const apply = () => {
         if (!slide.classList.contains("is-on") || !img.naturalWidth) return;
-        box.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`;
-        box.style.width = `min(100vw, ${img.naturalWidth}px)`;
+        fill(img);
       };
       if (img.complete && img.naturalWidth) apply();
       else img.addEventListener("load", apply, { once: true });

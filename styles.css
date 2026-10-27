@@ -262,14 +262,14 @@ button, input, select { font: inherit; color: inherit; }
 }
 .hero-rotator {
   position: relative;
-  width: min(100vw, 1280px);
-  max-width: 100%;
+  width: 100%;
+  max-width: none;
   height: auto;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 1024 / 341;
   margin: 0;
   border-radius: 0;
   overflow: hidden;
-  background: transparent;
+  background: #2a0204;
 }
 .hero-dots {
   display: flex;
