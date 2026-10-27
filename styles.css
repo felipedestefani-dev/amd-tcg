@@ -58,6 +58,7 @@ body {
 }
 
 img { max-width: 100%; display: block; }
+img[hidden] { display: none !important; }
 a { color: inherit; }
 button, input, select { font: inherit; color: inherit; }
 
