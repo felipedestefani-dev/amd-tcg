@@ -433,6 +433,7 @@ button, input, select { font: inherit; color: inherit; }
   grid-auto-columns: 200px;
   gap: 0.75rem;
   overflow-x: auto;
+  overflow-y: hidden;
   overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;
   padding: 0.2rem 0.05rem 0.7rem;
