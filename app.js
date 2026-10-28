@@ -119,6 +119,11 @@
     return Number(value).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   }
 
+  function shipNote(prefix) {
+    const lead = prefix ? `${esc(prefix)} ` : "";
+    return `<p class="note">${lead}<span class="ship-by">Enviado pelo <img src="assets/superfrete.png?v=2" alt="SuperFrete" /></span></p>`;
+  }
+
   function artFile(number) {
     const file = String(number || "").split("/")[0].trim();
     if (/^0+\d+$/.test(file)) return String(Number(file));
@@ -294,7 +299,7 @@
       return `
         <div class="set-rail">
           <div class="section-head">
-            <h3>${esc(set.name)} <span>${esc(set.code)}</span></h3>
+            <h3><img class="set-mark" alt="" src="${esc(setLogo(set.id))}" />${esc(set.name)} <span>${esc(set.code)}</span></h3>
             <a href="#/set/${esc(set.id)}">Ver coleção</a>
           </div>
           <div class="row">${items.map((product) => cardHtml(product, from)).join("")}</div>
@@ -371,11 +376,14 @@
     return `<a class="back" href="${esc(href)}"${scroll ? ` data-scroll="${scroll}"` : ""}><img src="assets/icons/back.png" alt="" />Voltar</a>`;
   }
 
-  function listPage(title, lede, items, from) {
+  function listPage(title, lede, items, from, mark) {
     const body = items.length
       ? `<div class="grid">${items.map((product) => cardHtml(product, from)).join("")}</div>`
       : `<p class="empty">Nenhum item por aqui.</p>`;
-    return `<h1 class="page-title">${esc(title)}</h1><p class="lede">${esc(lede)}</p>${body}`;
+    const heading = mark
+      ? `<h1 class="page-title with-mark">${mark}${esc(title)}</h1>`
+      : `<h1 class="page-title">${esc(title)}</h1>`;
+    return `${heading}<p class="lede">${esc(lede)}</p>${body}`;
   }
 
   const tracking = new Set();
@@ -512,6 +520,7 @@
       spinHero();
       bindJumps();
       bindRails();
+      document.querySelectorAll("img.set-mark").forEach(fitSetImage);
     });
     const { name, id, from } = route();
     const query = plainField(qInput.value, 80).toLowerCase();
@@ -560,7 +569,7 @@
               <tr><th>Quantidade</th><td>${onOrder(product) ? "Sob encomenda" : `${product.qty} un.`}</td></tr>
             </table>
             <a class="ask" href="${esc(waLink(product))}" target="_blank" rel="noopener noreferrer"><img src="${I.buy}" alt="" />${buyLabel(product)}</a>
-            <p class="note">${onOrder(product) ? "Sob encomenda. O valor e o prazo combinamos no pedido." : product.kind === "presale" ? "Pré-venda. Lançamento em 6 de novembro de 2026. Frete combinado no pedido." : "Frete combinado no pedido."}</p>
+            ${shipNote(onOrder(product) ? "Sob encomenda. O valor e o prazo combinamos no pedido." : product.kind === "presale" ? "Pré-venda. Lançamento em 6 de novembro de 2026." : "")}
           </div>
         </article>`;
       return;
@@ -583,7 +592,7 @@
               <label>Senha<input name="password" type="password" minlength="6" maxlength="72" required autocomplete="new-password" /></label>
               <label class="agree">
                 <input name="terms" type="checkbox" required />
-                <span>Concordo com os <a href="#/termos">Termos de uso</a>, a <a href="#/privacidade">Política de privacidade</a> e a <a href="#/cookies">Política de cookies</a>.</span>
+                <span>Concordo com os <a href="#/termos">Termos de uso</a>, a <a href="#/privacidade">Política de privacidade</a>, a <a href="#/cookies">Política de cookies</a>, a <a href="#/envio">Política de envio e entrega</a>, a <a href="#/trocas">Política de trocas e devoluções</a> e a <a href="#/reembolso">Política de reembolso e cancelamento</a>.</span>
               </label>
               <button class="solid" type="submit">Criar conta</button>
             </form>
@@ -625,8 +634,8 @@
       return;
     }
 
-    if (name === "privacidade" || name === "cookies" || name === "termos") {
-      main.innerHTML = legalPage(name);
+    if (name === "privacidade" || name === "cookies" || name === "termos" || name === "envio" || name === "trocas" || name === "reembolso" || name === "pagamento") {
+      main.innerHTML = legalPage(name === "pagamento" ? "trocas" : name);
       return;
     }
 
@@ -676,7 +685,7 @@
       document.title = "Coleções · A.M.D TCG";
       const rows = setsByCards().map((set) => {
         const count = shop.products.filter((product) => product.set === set.id).length;
-        return `<a class="set-link" href="#/set/${esc(set.id)}" data-find="${esc(`${set.name} ${set.en || ""} ${set.code}`)}"><strong>${esc(set.name)}</strong><span>${esc(set.code)} · ${count}</span></a>`;
+        return `<a class="set-link" href="#/set/${esc(set.id)}" data-find="${esc(`${set.name} ${set.en || ""} ${set.code}`)}"><img class="set-mark" alt="" src="${esc(setLogo(set.id))}" /><strong>${esc(set.name)}</strong><span>${esc(set.code)} · ${count}</span></a>`;
       }).join("");
       main.innerHTML = `<h1 class="page-title">Coleções</h1><p class="lede">Escolha a coleção.</p><input id="set-find" class="set-find" type="search" placeholder="Buscar coleção" /><div class="sets" id="set-list">${rows}</div>`;
       document.getElementById("set-find").addEventListener("input", (event) => {
@@ -695,7 +704,7 @@
         return;
       }
       document.title = `${set.name} · A.M.D TCG`;
-      main.innerHTML = listPage(set.name, set.code, shop.products.filter((product) => product.set === set.id), "set");
+      main.innerHTML = listPage(set.name, set.code, shop.products.filter((product) => product.set === set.id), "set", `<img class="set-mark" alt="" src="${esc(setLogo(set.id))}" />`);
       return;
     }
 
@@ -715,7 +724,6 @@
       : `<p class="empty">Nenhum item no momento.</p>`;
     main.innerHTML = banner() + `
       <nav class="jumps" aria-label="Seções do catálogo">
-        <button type="button" data-jump="loja-alta">Em alta e caros<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
         <button type="button" data-jump="loja-avulsos">Avulsos<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
         <button type="button" data-jump="loja-prevenda">Pré-venda<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
         <button type="button" data-jump="loja-lacrados">Lacrados<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
@@ -727,7 +735,7 @@
   }
 
   function legalPage(name) {
-    const updated = "27 de outubro de 2026";
+    const updated = "28 de outubro de 2026";
     const pages = {
       privacidade: {
         title: "Política de privacidade",
@@ -784,7 +792,7 @@
         body: `
           <p>Ao usar o site da A.M.D TCG você vê o catálogo e, se quiser, pede um item pelo WhatsApp. Comprar no botão abre a conversa com a loja. O pedido se fecha nessa conversa, não aqui no site.</p>
           <h2>Catálogo e preço</h2>
-          <p>Preço, quantidade e condição são os que estão na ficha no momento. O item pode acabar antes da confirmação. O valor final, o frete e a reserva são combinados no WhatsApp.</p>
+          <p>Preço, quantidade e condição são os que estão na ficha no momento. O item pode acabar antes da confirmação. O valor do produto e a reserva são confirmados no WhatsApp. O envio segue a <a href="#/envio">Política de envio e entrega</a>. Troca, devolução, reembolso e cancelamento seguem a <a href="#/trocas">Política de trocas e devoluções</a>, a <a href="#/reembolso">Política de reembolso e cancelamento</a> e o Código de Defesa do Consumidor.</p>
           <h2>Conta</h2>
           <p>Os dados do cadastro precisam ser seus. A senha é sua responsabilidade. A loja pode recusar cadastro com informação falsa ou uso que atrapalhe o site e os outros clientes.</p>
           <h2>O que não fazer</h2>
@@ -799,6 +807,62 @@
           <p>O site mostra o que está disponível. Atraso de operadora, falta de estoque ou instabilidade do WhatsApp não geram compra automática. A lei brasileira vale para estes termos.</p>
           <p>Dúvida ou pedido sobre estes termos: WhatsApp <a href="https://api.whatsapp.com/send?phone=5511969194152">11 96919-4152</a>.</p>
           <p>Atualizado em ${updated}.</p>`,
+      },
+      envio: {
+        title: "Política de Envio e Entrega",
+        body: `
+          <p>Nosso objetivo é garantir que suas cartas Pokémon cheguem até você com segurança e praticidade.</p>
+          <h2>Formas de envio</h2>
+          <p>Realizamos nossos envios por meio das modalidades de transporte disponíveis através da <span class="sf-lock"><img class="sf-logo" src="assets/superfrete.png?v=2" alt="SuperFrete" />.</span> As opções de envio e os respectivos valores serão informados durante o atendimento pelo WhatsApp.</p>
+          <h2>Prazo de postagem</h2>
+          <p>Após a confirmação do pagamento, seu pedido será preparado para envio. O prazo estimado para postagem será informado durante a compra.</p>
+          <h2>Prazo de entrega</h2>
+          <p>O prazo de entrega depende do endereço de destino e da modalidade de envio escolhida. A estimativa será informada antes da confirmação do pedido e poderá sofrer alterações por fatores relacionados ao transporte.</p>
+          <h2>Código de rastreamento</h2>
+          <p>Quando disponível, você receberá o código de rastreamento para acompanhar o trajeto do seu pedido.</p>
+          <h2>Conferência do endereço</h2>
+          <p>Confira atentamente seu endereço de entrega antes de finalizar a compra. Caso identifique algum erro, entre em contato conosco o mais rápido possível.</p>
+          <h2>Atrasos ou problemas na entrega</h2>
+          <p>Se seu pedido atrasar, não chegar ou apresentar algum problema durante o transporte, entre em contato conosco pelo <a href="https://api.whatsapp.com/send?phone=5511969194152">WhatsApp</a>. Vamos verificar a situação e orientar você sobre os próximos passos.</p>
+          <h2>Proteção dos produtos</h2>
+          <p>Nossas cartas são embaladas com cuidado para reduzir o risco de danos durante o transporte. A embalagem utilizada poderá variar conforme o produto adquirido.</p>
+          <p>Nosso compromisso é oferecer uma experiência de compra transparente, segura e confiável.</p>`,
+      },
+      trocas: {
+        title: "Política de Trocas e Devoluções",
+        body: `
+          <p>Queremos que você fique satisfeito com sua compra. Por isso, disponibilizamos orientações claras para solicitações de troca e devolução.</p>
+          <h2>Direito de arrependimento</h2>
+          <p>Nas compras realizadas à distância, você tem o direito de se arrepender da compra no prazo legal de 7 dias, contado conforme o artigo 49 do Código de Defesa do Consumidor. Esse direito também se aplica às compras concluídas pelo WhatsApp.</p>
+          <h2>Como solicitar uma devolução</h2>
+          <p>Entre em contato conosco pelo <a href="https://api.whatsapp.com/send?phone=5511969194152">WhatsApp</a>, informe o número do pedido e comunique sua solicitação. Nossa equipe fornecerá as orientações necessárias para realizar a devolução.</p>
+          <h2>Condição das cartas</h2>
+          <p>As cartas Pokémon podem apresentar diferentes condições de conservação. Por isso, recomendamos conferir atentamente as fotos e a descrição do produto antes de comprar.</p>
+          <h2>Produto danificado ou diferente do anunciado</h2>
+          <p>Se você receber uma carta danificada, diferente da adquirida ou com características divergentes das informadas no anúncio, entre em contato conosco para que possamos resolver a situação conforme seus direitos legais.</p>
+          <h2>Envio da devolução</h2>
+          <p>Após o contato, você receberá as instruções para encaminhar o produto. Os custos de devolução serão tratados conforme o motivo da solicitação e a legislação aplicável.</p>
+          <h2>Reembolso</h2>
+          <p>Quando cabível, o reembolso será realizado conforme a legislação vigente e os procedimentos da forma de pagamento utilizada.</p>
+          <p>Todas as solicitações serão tratadas com atenção e respeito aos direitos do consumidor.</p>`,
+      },
+      reembolso: {
+        title: "Política de Reembolso e Cancelamento",
+        body: `
+          <p>Queremos que você tenha clareza sobre como funcionam os cancelamentos e os reembolsos em nossa loja.</p>
+          <h2>Cancelamento antes do envio</h2>
+          <p>Se desejar cancelar seu pedido antes da postagem, entre em contato conosco pelo <a href="https://api.whatsapp.com/send?phone=5511969194152">WhatsApp</a> o mais rápido possível. Verificaremos a situação do pedido e informaremos como proceder.</p>
+          <h2>Cancelamento após o envio</h2>
+          <p>Se o pedido já tiver sido enviado, entre em contato com nossa equipe para receber as orientações necessárias. Seus direitos previstos na legislação serão respeitados.</p>
+          <h2>Direito de arrependimento</h2>
+          <p>Nas compras realizadas à distância, você poderá exercer seu direito de arrependimento dentro do prazo legal de 7 dias, contado conforme a legislação aplicável.</p>
+          <h2>Produtos com problemas</h2>
+          <p>Se receber um produto danificado, incorreto ou diferente do anunciado, entre em contato conosco para que a situação seja analisada e resolvida conforme a legislação vigente.</p>
+          <h2>Como o reembolso será realizado</h2>
+          <p>Quando aplicável, o reembolso será processado pelo meio de pagamento original, observados os procedimentos necessários e as regras legais.</p>
+          <p>O prazo para o valor aparecer em sua conta ou fatura poderá variar de acordo com o banco, a operadora ou a instituição responsável pelo pagamento.</p>
+          <h2>Como entrar em contato</h2>
+          <p>Para solicitar cancelamento ou reembolso, fale conosco pelo <a href="https://api.whatsapp.com/send?phone=5511969194152">WhatsApp</a> informado em nosso site. Nossa equipe orientará você durante o processo.</p>`,
       },
     };
     const page = pages[name];

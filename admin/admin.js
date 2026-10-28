@@ -228,9 +228,9 @@
         <input type="hidden" name="number" value="${esc(p.number)}" />
         <input type="hidden" name="rarity" value="${esc(p.rarity)}" />
         <input type="hidden" name="condition" value="${esc(p.condition)}" />
-        <input type="hidden" name="lang" value="${esc(p.lang)}" />
         <input type="hidden" name="finish" value="${esc(p.finish || "Lacrado")}" />
-        <div class="row-2">${field("qty", "Quantidade", p.qty, "number")}${priceField(p.price)}</div>` : `
+        <div class="row-2">${field("qty", "Quantidade", p.qty, "number")}${priceField(p.price)}</div>
+        ${langField(p.lang || "PT")}` : `
         <div class="row-2">${field("number", "Número", p.number)}${field("rarity", "Raridade", p.rarity)}</div>
         <div class="row-2">${field("condition", "Condição", p.condition)}${langField(p.lang)}</div>
         <div class="row-2">${field("finish", "Acabamento", p.finish)}${field("qty", "Quantidade", p.qty, "number")}</div>
