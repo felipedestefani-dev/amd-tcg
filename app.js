@@ -18,6 +18,7 @@
   }
 
   function setLogo(id) {
+    if (id === "me6") return "assets/products/me06-logo.png";
     return `https://images.pokemontcg.io/${id}/logo.png`;
   }
 
@@ -82,15 +83,11 @@
   }
 
   function payPrice(value) {
-    const full = Number(value) || 0;
-    if (!loggedIn()) return full;
-    return Math.round(full * 95) / 100;
+    return Number(value) || 0;
   }
 
   function priceHtml(value) {
-    const full = Number(value) || 0;
-    if (!loggedIn()) return esc(money(full));
-    return `<s>${esc(money(full))}</s> ${esc(money(payPrice(full)))}`;
+    return esc(money(payPrice(value)));
   }
 
   function money(value) {
@@ -123,7 +120,7 @@
     const set = setOf(product.set);
     const code = product.number ? ` ${numberLabel(product.number)}` : "";
     return [
-      "Olá! Quero reservar:",
+      product.kind === "presale" ? "Olá! Quero reservar a pré-venda:" : "Olá! Quero reservar:",
       `${product.name}${code}`,
       `${set.name} · ${product.lang} · ${product.condition} · ${product.finish}`,
       money(payPrice(product.price)),
@@ -139,7 +136,8 @@
     const photo = imageOf(product);
     if (photo) return `<img src="${esc(photo)}" alt="${esc(product.name)}" loading="lazy" width="245" height="342" onload="if(this.naturalWidth===640&&this.naturalHeight===892)this.hidden=true" onerror="this.hidden=true" />`;
     const set = setOf(product.set);
-    return `<div class="pack"><img src="${I.sealed}" alt="" /><b>${esc(product.name)}</b><span>${esc(set.code)} · lacrado</span></div>`;
+    const tag = product.kind === "presale" ? "pré-venda" : "lacrado";
+    return `<div class="pack"><img src="${I.sealed}" alt="" /><b>${esc(product.name)}</b><span>${esc(set.code)} · ${tag}</span></div>`;
   }
 
   function flagOf(lang) {
@@ -161,22 +159,23 @@
     return `<span class="flag" role="img" aria-label="${esc(hit[0])}" title="${esc(hit[0])}">${hit[1]}</span>`;
   }
 
-  function cardHtml(product) {
+  function cardHtml(product, from) {
     const set = setOf(product.set);
     const number = product.number ? ` ${esc(numberLabel(product.number))}` : "";
+    const origin = from ? `/${encodeURIComponent(from)}` : "";
     return `
       <article class="card">
-        <a class="card-link" href="#/carta/${esc(product.id)}">
+        <a class="card-link" href="#/carta/${esc(product.id)}${origin}">
           <div class="shot">${shot(product)}</div>
           <div class="card-body">
             <h3>${esc(product.name)}</h3>
             <p class="setline">${esc(set.name)}${number}</p>
-            <p class="tags"><span>${esc(product.condition)}</span>${flagOf(product.lang)}<span>${esc(product.finish)}</span><span>${product.qty} un.</span></p>
+            <p class="tags"><span>${esc(product.condition)}</span>${flagOf(product.lang)}${product.finish && product.finish !== product.condition ? `<span>${esc(product.finish)}</span>` : ""}<span>${product.qty} un.</span></p>
             <p class="price">${priceHtml(product.price)}</p>
           </div>
         </a>
         <a class="buy" href="${esc(waLink(product))}" target="_blank" rel="noopener noreferrer">
-          <img src="${I.buy}" alt="" />Comprar
+          <img src="${I.buy}" alt="" />${product.kind === "presale" ? "Reservar" : "Comprar"}
         </a>
       </article>`;
   }
@@ -184,7 +183,7 @@
   function route() {
     const raw = (location.hash || "#/").replace(/^#/, "");
     const parts = raw.split("/").filter(Boolean);
-    return { name: parts[0] || "home", id: decodeURIComponent(parts[1] || "") };
+    return { name: parts[0] || "home", id: decodeURIComponent(parts[1] || ""), from: decodeURIComponent(parts[2] || "") };
   }
 
   function markNav(name) {
@@ -204,13 +203,11 @@
     return `
       <div class="hero">
         <div class="hero-rotator">
+          <img src="assets/banner-trick.jpg?v=2" alt="Halloween 2024 disponível: Trick or Trade" />
           <a href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer" aria-label="AMD na Jamble, confira já">
-            <img src="assets/banner-jamble.jpg?v=1" alt="" />
+            <img src="assets/banner-jamble.jpg?v=2" alt="" />
           </a>
-          <img src="assets/banner.jpg?v=8" alt="Um novo site para os amantes de Pokémon" />
-          <a href="#/cadastro" aria-label="Clientes cadastrados ganham 5% de desconto">
-            <img src="assets/banner-desconto.jpg?v=8" alt="" />
-          </a>
+          <img src="assets/banner.jpg?v=9" alt="Pré-venda disponível: Megaevolução Reinado Delta" />
         </div>
         <div class="hero-dots">
           <button type="button" aria-label="Primeiro banner"></button>
@@ -220,27 +217,44 @@
       </div>`;
   }
 
-  function setRails(products) {
+  function setsByCards() {
+    const count = new Map();
+    for (const product of shop.products) {
+      if (product.kind !== "single") continue;
+      count.set(product.set, (count.get(product.set) || 0) + 1);
+    }
+    return [...shop.sets].sort((a, b) => (count.get(b.id) || 0) - (count.get(a.id) || 0) || a.name.localeCompare(b.name, "pt"));
+  }
+
+  function hotCards() {
+    return shop.products
+      .filter((product) => product.kind === "single" && product.price >= 200)
+      .sort((a, b) => b.price - a.price);
+  }
+
+  function setRails(products, from) {
     const groups = new Map();
     for (const product of products) {
       const key = product.set || "";
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(product);
     }
-    const known = shop.sets.map((set) => set.id).filter((id) => groups.has(id));
-    const extra = [...groups.keys()].filter((id) => !known.includes(id));
-    const ids = [...known, ...extra];
+    const ids = [...groups.keys()].sort((a, b) => {
+      const diff = groups.get(b).length - groups.get(a).length;
+      if (diff) return diff;
+      return setOf(a).name.localeCompare(setOf(b).name, "pt");
+    });
     if (!ids.length) return `<p class="empty">Nenhum item no momento.</p>`;
     return ids.map((id) => {
       const set = setOf(id);
-      const items = groups.get(id);
+      const items = groups.get(id).slice().sort((a, b) => b.price - a.price);
       return `
         <div class="set-rail">
           <div class="section-head">
             <h3>${esc(set.name)} <span>${esc(set.code)}</span></h3>
             <a href="#/set/${esc(set.id)}">Ver coleção</a>
           </div>
-          <div class="row">${items.map(cardHtml).join("")}</div>
+          <div class="row">${items.map((product) => cardHtml(product, from)).join("")}</div>
         </div>`;
     }).join("");
   }
@@ -252,23 +266,33 @@
       let startX = 0;
       let startScroll = 0;
       let moved = false;
+      let tracking = false;
+      let pointerId = 0;
       row.addEventListener("pointerdown", (event) => {
-        if (event.pointerType === "touch") return;
+        if (event.pointerType === "touch" || event.button !== 0) return;
+        if (event.target.closest("a.buy")) return;
         startX = event.clientX;
         startScroll = row.scrollLeft;
         moved = false;
-        row.setPointerCapture(event.pointerId);
+        tracking = true;
+        pointerId = event.pointerId;
       });
       row.addEventListener("pointermove", (event) => {
-        if (!row.hasPointerCapture(event.pointerId)) return;
+        if (!tracking || event.pointerId !== pointerId) return;
         const dx = event.clientX - startX;
-        if (Math.abs(dx) > 5) {
+        if (!moved && Math.abs(dx) <= 5) return;
+        if (!moved) {
           moved = true;
           row.classList.add("is-drag");
+          row.setPointerCapture(event.pointerId);
         }
         row.scrollLeft = startScroll - dx;
       });
-      const end = () => row.classList.remove("is-drag");
+      const end = (event) => {
+        if (event.pointerId !== pointerId) return;
+        tracking = false;
+        row.classList.remove("is-drag");
+      };
       row.addEventListener("pointerup", end);
       row.addEventListener("pointercancel", end);
       row.addEventListener("click", (event) => {
@@ -293,9 +317,20 @@
     if (head) document.documentElement.style.setProperty("--head", `${head.offsetHeight}px`);
   }
 
-  function listPage(title, lede, items) {
+  function backAnchor(product, from) {
+    let href = "#/";
+    let scroll = "";
+    if (from === "set") href = `#/set/${encodeURIComponent(product.set)}`;
+    else if (from === "alta") scroll = "loja-alta";
+    else if (from === "avulsos") scroll = "loja-avulsos";
+    else if (from === "prevenda" || product.kind === "presale") href = "#/prevenda";
+    else if (from === "lacrados" || product.kind === "sealed") href = "#/lacrados";
+    return `<a class="back" href="${esc(href)}"${scroll ? ` data-scroll="${scroll}"` : ""}><img src="assets/icons/back.png" alt="" />Voltar</a>`;
+  }
+
+  function listPage(title, lede, items, from) {
     const body = items.length
-      ? `<div class="grid">${items.map(cardHtml).join("")}</div>`
+      ? `<div class="grid">${items.map((product) => cardHtml(product, from)).join("")}</div>`
       : `<p class="empty">Nenhum item por aqui.</p>`;
     return `<h1 class="page-title">${esc(title)}</h1><p class="lede">${esc(lede)}</p>${body}`;
   }
@@ -402,7 +437,7 @@
       bindJumps();
       bindRails();
     });
-    const { name, id } = route();
+    const { name, id, from } = route();
     const query = qInput.value.trim().toLowerCase();
     markNav(name);
     if (name === "set" && shop.sets.some((set) => set.id === id)) paintSetPick(id);
@@ -432,7 +467,7 @@
       const set = setOf(product.set);
       document.title = `${product.name} · A.M.D TCG`;
       main.innerHTML = `
-        <a class="back" href="#/${product.kind === "sealed" ? "lacrados" : "set/" + product.set}">Voltar</a>
+        ${backAnchor(product, from)}
         <article class="detail">
           <div class="detail-shot"><div class="shot">${shot(product)}</div></div>
           <div>
@@ -440,7 +475,7 @@
             <h1>${esc(product.name)}</h1>
             <p class="price">${priceHtml(product.price)}</p>
             <table class="specs">
-              <tr><th>Tipo</th><td>${product.kind === "sealed" ? "Lacrado" : "Carta avulsa"}</td></tr>
+              <tr><th>Tipo</th><td>${product.kind === "presale" ? "Pré-venda" : product.kind === "sealed" ? "Lacrado" : "Carta avulsa"}</td></tr>
               <tr><th>Coleção</th><td>${esc(set.name)} (${esc(set.code)})</td></tr>
               <tr><th>Raridade</th><td>${esc(product.rarity)}</td></tr>
               <tr><th>Condição</th><td>${esc(product.condition)}</td></tr>
@@ -448,8 +483,8 @@
               <tr><th>Acabamento</th><td>${esc(product.finish)}</td></tr>
               <tr><th>Quantidade</th><td>${product.qty} un.</td></tr>
             </table>
-            <a class="ask" href="${esc(waLink(product))}" target="_blank" rel="noopener noreferrer"><img src="${I.buy}" alt="" />Comprar</a>
-            <p class="note">Frete combinado no pedido.</p>
+            <a class="ask" href="${esc(waLink(product))}" target="_blank" rel="noopener noreferrer"><img src="${I.buy}" alt="" />${product.kind === "presale" ? "Reservar" : "Comprar"}</a>
+            <p class="note">${product.kind === "presale" ? "Pré-venda. Lançamento em 6 de novembro de 2026. Frete combinado no pedido." : "Frete combinado no pedido."}</p>
           </div>
         </article>`;
       return;
@@ -464,7 +499,7 @@
           <section class="auth-card">
             <a class="brand" href="#/" aria-label="A.M.D TCG, início"><img src="assets/logo-mark.png?v=10" alt="" width="120" height="80" /></a>
             <h1 class="page-title">Criar conta</h1>
-            <p class="lede">Cadastre-se e ganhe 5% de desconto.</p>
+            <p class="lede">Preencha seus dados para criar a conta.</p>
             <form class="form" id="signup">
               <label>Nome<input name="name" required value="${esc(user?.name || "")}" autocomplete="name" /></label>
               <label>E-mail<input name="email" type="email" required value="${esc(user?.email || "")}" autocomplete="email" /></label>
@@ -539,17 +574,27 @@
     if (name === "avulsos") {
       document.title = "Avulsos · A.M.D TCG";
       const singles = shop.products.filter((product) => product.kind === "single");
-      main.innerHTML = `<h1 class="page-title">Avulsos</h1><p class="lede">Unidades escolhidas uma a uma.</p>${setRails(singles)}`;
+      main.innerHTML = `<h1 class="page-title">Avulsos</h1><p class="lede">Unidades escolhidas uma a uma.</p>${setRails(singles, "avulsos")}`;
+      return;
+    }
+    if (name === "alta") {
+      document.title = "Em alta e caros · A.M.D TCG";
+      main.innerHTML = listPage("Em alta e caros", "As cartas de maior valor.", hotCards(), "alta");
+      return;
+    }
+    if (name === "prevenda") {
+      document.title = "Pré-venda · A.M.D TCG";
+      main.innerHTML = listPage("Pré-venda", "Reinado Delta", shop.products.filter((p) => p.kind === "presale").sort((a, b) => ["me6-triple", "me6-quad", "me6-box", "me6-combo", "me6-etb"].indexOf(a.id) - ["me6-triple", "me6-quad", "me6-box", "me6-combo", "me6-etb"].indexOf(b.id)), "prevenda");
       return;
     }
     if (name === "lacrados") {
       document.title = "Lacrados · A.M.D TCG";
-      main.innerHTML = listPage("Lacrados", "Caixas e packs fechados de fábrica.", shop.products.filter((p) => p.kind === "sealed"));
+      main.innerHTML = listPage("Lacrados", "Caixas e packs fechados de fábrica.", shop.products.filter((p) => p.kind === "sealed"), "lacrados");
       return;
     }
     if (name === "colecoes") {
       document.title = "Coleções · A.M.D TCG";
-      const rows = shop.sets.map((set) => {
+      const rows = setsByCards().map((set) => {
         const count = shop.products.filter((product) => product.set === set.id).length;
         return `<a class="set-link" href="#/set/${esc(set.id)}" data-find="${esc(`${set.name} ${set.en || ""} ${set.code}`)}"><strong>${esc(set.name)}</strong><span>${esc(set.code)} · ${count}</span></a>`;
       }).join("");
@@ -570,22 +615,34 @@
         return;
       }
       document.title = `${set.name} · A.M.D TCG`;
-      main.innerHTML = listPage(set.name, set.code, shop.products.filter((product) => product.set === set.id));
+      main.innerHTML = listPage(set.name, set.code, shop.products.filter((product) => product.set === set.id), "set");
       return;
     }
 
     document.title = "A.M.D TCG — Pokémon";
     const singles = shop.products.filter((product) => product.kind === "single");
+    const presaleOrder = ["me6-triple", "me6-quad", "me6-box", "me6-combo", "me6-etb"];
+    const presale = shop.products.filter((product) => product.kind === "presale").sort((a, b) => {
+      const rank = (id) => {
+        const index = presaleOrder.indexOf(id);
+        return index < 0 ? presaleOrder.length : index;
+      };
+      return rank(a.id) - rank(b.id);
+    });
     const sealed = shop.products.filter((product) => product.kind === "sealed");
     const cards = (items) => items.length
       ? `<div class="grid">${items.map(cardHtml).join("")}</div>`
       : `<p class="empty">Nenhum item no momento.</p>`;
     main.innerHTML = banner() + `
       <nav class="jumps" aria-label="Seções do catálogo">
+        <button type="button" data-jump="loja-alta">Em alta e caros<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
         <button type="button" data-jump="loja-avulsos">Avulsos<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+        <button type="button" data-jump="loja-prevenda">Pré-venda<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
         <button type="button" data-jump="loja-lacrados">Lacrados<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
       </nav>
-      ${shelf("loja-avulsos", "Avulsos", "Unidades escolhidas uma a uma.", setRails(singles))}
+      ${shelf("loja-alta", "Em alta e caros", "As cartas de maior valor.", `<div class="row">${hotCards().map((product) => cardHtml(product, "alta")).join("")}</div>`)}
+      ${shelf("loja-avulsos", "Avulsos", "Unidades escolhidas uma a uma.", setRails(singles, "avulsos"))}
+      ${shelf("loja-prevenda", "Pré-venda", "Reinado Delta", cards(presale))}
       ${shelf("loja-lacrados", "Lacrados", "Caixas e packs fechados de fábrica.", cards(sealed))}`;
   }
 
@@ -607,7 +664,7 @@
           </ul>
           <h2>Para que serve</h2>
           <ul>
-            <li>Criar a conta e aplicar o desconto de 5% enquanto você está dentro dela.</li>
+            <li>Criar e manter a sua conta.</li>
             <li>Montar a mensagem do pedido no WhatsApp.</li>
             <li>Contar visitas, quando você aceita, para a loja entender o movimento do catálogo.</li>
             <li>Manter o site no ar e proteger a conta contra uso indevido.</li>
@@ -630,7 +687,7 @@
           <p>Este site não usa cookie de anúncio. O que fica no aparelho serve para a conta funcionar e, se você aceitar, para contar a visita.</p>
           <h2>Necessários</h2>
           <ul>
-            <li>Sessão da conta, para saber que você entrou e aplicar o desconto de 5% nesta aba.</li>
+            <li>Sessão da conta, para saber que você entrou nesta aba.</li>
             <li>Nome, e-mail e telefone do cadastro, para preencher a conta neste aparelho.</li>
             <li>Sua escolha neste aviso: aceitar as visitas ou ficar só com o necessário.</li>
           </ul>
@@ -647,7 +704,7 @@
         body: `
           <p>Ao usar o site da A.M.D TCG você vê o catálogo e, se quiser, pede um item pelo WhatsApp. Comprar no botão abre a conversa com a loja. O pedido se fecha nessa conversa, não aqui no site.</p>
           <h2>Catálogo e preço</h2>
-          <p>Preço, quantidade e condição são os que estão na ficha no momento. O item pode acabar antes da confirmação. Quem está dentro da conta vê 5% de desconto nos preços do site. O valor final, o frete e a reserva são combinados no WhatsApp.</p>
+          <p>Preço, quantidade e condição são os que estão na ficha no momento. O item pode acabar antes da confirmação. O valor final, o frete e a reserva são combinados no WhatsApp.</p>
           <h2>Conta</h2>
           <p>Os dados do cadastro precisam ser seus. A senha é sua responsabilidade. A loja pode recusar cadastro com informação falsa ou uso que atrapalhe o site e os outros clientes.</p>
           <h2>O que não fazer</h2>
@@ -739,7 +796,6 @@
         <section class="auth-card profile-card">
           <a class="brand" href="#/" aria-label="A.M.D TCG, início"><img src="assets/logo-mark.png?v=10" alt="" width="120" height="80" /></a>
           <h1 class="page-title">Sua conta</h1>
-          <p class="lede">Clientes cadastrados ganham 5% de desconto.</p>
           <dl class="profile">
             <div><dt>Nome</dt><dd id="profile-name">${esc(titled(user.name) || "Não informado")}</dd></div>
             <div><dt>E-mail</dt><dd id="profile-email">${esc(user.email || "Não informado")}</dd></div>
@@ -891,7 +947,7 @@
     const root = document.getElementById("set-filter");
     const current = root.dataset.value || "";
     const list = root.querySelector(".set-pick-list");
-    list.innerHTML = `<button type="button" data-id="" role="option"><span>Todas as coleções</span></button>` + shop.sets.map((set) => `
+    list.innerHTML = `<button type="button" data-id="" role="option"><span>Todas as coleções</span></button>` + setsByCards().map((set) => `
       <button type="button" data-id="${esc(set.id)}" role="option">
         <img alt="" data-src="${esc(setLogo(set.id))}" />
         <span>${esc(set.name)}</span>
@@ -914,13 +970,14 @@
         rows = again.data;
         rowsError = again.error;
       }
-      if (setError || rowsError || !rows || !rows.length) return;
+      if (setError || rowsError || !rows) return;
+      const local = shop.products.slice();
       for (const set of sets || []) {
         if (!shop.sets.some((item) => item.id === set.id)) shop.sets.push({ id: set.id, name: set.name, code: set.code });
       }
-      shop.products = rows.map((product) => ({
+      shop.products = (rows.length ? rows : []).map((product) => ({
         id: product.id,
-        kind: product.kind,
+        kind: String(product.id).startsWith("me6-") ? "presale" : product.kind,
         name: product.name,
         set: product.set_id,
         number: product.number || "",
@@ -932,6 +989,10 @@
         price: Number(product.price),
         image: product.image || "",
       }));
+      const seen = new Set(shop.products.map((product) => product.id));
+      for (const product of local) {
+        if (!seen.has(product.id)) shop.products.push(product);
+      }
       remote = true;
     } catch (error) {
       console.warn("Supabase indisponível, usando a vitrine local.", error);
@@ -950,12 +1011,30 @@
     backdrop.hidden = !open;
   }
 
+  let pendingScroll = "";
+  function revealSection(id) {
+    const target = document.getElementById(id);
+    if (!target) return false;
+    document.querySelectorAll("[data-jump]").forEach((item) => item.classList.toggle("is-on", item.dataset.jump === id));
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    target.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    return true;
+  }
   window.addEventListener("hashchange", () => {
     qInput.value = "";
     closeSetPick();
     setMenu(false);
+    const section = pendingScroll;
+    pendingScroll = "";
     render();
+    if (section && revealSection(section)) return;
     window.scrollTo(0, 0);
+  });
+  document.addEventListener("click", (event) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const back = event.target.closest("a.back");
+    if (!back) return;
+    pendingScroll = back.dataset.scroll || "";
   });
   document.getElementById("menu-btn").addEventListener("click", () => {
     const open = document.getElementById("menu-btn").getAttribute("aria-expanded") !== "true";

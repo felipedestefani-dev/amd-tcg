@@ -40,6 +40,11 @@
     "Rare Holo": "Rara holográfica",
   };
 
+  function displayKind(product) {
+    if (String(product?.id || "").startsWith("me6-")) return "presale";
+    return product?.kind || "";
+  }
+
   function esc(value) {
     return String(value ?? "")
       .replace(/&/g, "&amp;")
@@ -53,6 +58,7 @@
   }
 
   function setLogo(id) {
+    if (id === "me6") return "/assets/products/me06-logo.png";
     return `https://images.pokemontcg.io/${id}/logo.png`;
   }
 
@@ -191,7 +197,7 @@
   }
 
   function productForm(product, kind) {
-    const mode = product?.kind || kind || "single";
+    const mode = product ? displayKind(product) : (kind || "single");
     const sealed = mode === "sealed";
     const p = product || { id: "", kind: mode, name: "", set_id: "", number: "", rarity: "", condition: sealed ? "" : "NM", lang: sealed ? "" : "PT", finish: sealed ? "Lacrado" : "Normal", qty: 1, price: "" };
     const file = String(p.number || "").split("/")[0];
@@ -219,8 +225,8 @@
         ${priceField(p.price)}`;
     return `
       <form id="editor" class="fields">
-        <h2>${product ? (sealed ? "Produto" : "Carta") : (sealed ? "Adicionar produto" : "Adicionar carta")}</h2>
-        <input type="hidden" name="kind" value="${sealed ? "sealed" : "single"}" />
+        <h2>${product ? (mode === "presale" ? "Pré-venda" : sealed ? "Produto" : "Carta") : (sealed ? "Adicionar produto" : "Adicionar carta")}</h2>
+        <input type="hidden" name="kind" value="${mode === "presale" ? "presale" : sealed ? "sealed" : "single"}" />
         ${search}
         <div class="photo-box">
           ${preview ? `<img id="card-preview" class="card-preview" src="${esc(preview)}" alt="" onload="if(this.naturalWidth===640&&this.naturalHeight===892)this.hidden=true" onerror="this.hidden=true" />` : `<div id="card-preview" class="card-preview empty">Sem foto</div>`}
@@ -286,7 +292,7 @@
   function stockList() {
     const query = stockQuery.trim().toLowerCase();
     return catalog.filter((product) => {
-      if (stockKind !== "all" && product.kind !== stockKind) return false;
+      if (stockKind !== "all" && displayKind(product) !== stockKind) return false;
       if (!query) return true;
       return `${product.name} ${product.number} ${product.set_id} ${setName(product.set_id)}`.toLowerCase().includes(query);
     });
@@ -350,8 +356,9 @@
   }
 
   function homeView() {
-    const singles = catalog.filter((product) => product.kind === "single");
-    const sealed = catalog.filter((product) => product.kind === "sealed");
+    const singles = catalog.filter((product) => displayKind(product) === "single");
+    const presale = catalog.filter((product) => displayKind(product) === "presale");
+    const sealed = catalog.filter((product) => displayKind(product) === "sealed");
     const units = catalog.reduce((sum, product) => sum + Number(product.qty || 0), 0);
     const value = catalog.reduce((sum, product) => sum + Number(product.price || 0) * Number(product.qty || 0), 0);
     const low = catalog.filter((product) => Number(product.qty) <= 1).slice(0, 6);
@@ -359,6 +366,7 @@
       <div class="stats">
         <article class="stat"><span>Itens</span><b>${catalog.length}</b></article>
         <article class="stat"><span>Avulsos</span><b>${singles.length}</b></article>
+        <article class="stat"><span>Pré-venda</span><b>${presale.length}</b></article>
         <article class="stat"><span>Lacrados</span><b>${sealed.length}</b></article>
         <article class="stat"><span>Em estoque</span><b>${money(value)}</b></article>
       </div>
@@ -560,6 +568,7 @@ create policy "ler clientes" on public.customers for select to authenticated usi
         <select id="stock-kind">
           <option value="all" ${stockKind === "all" ? "selected" : ""}>Tudo</option>
           <option value="single" ${stockKind === "single" ? "selected" : ""}>Avulsos</option>
+          <option value="presale" ${stockKind === "presale" ? "selected" : ""}>Pré-venda</option>
           <option value="sealed" ${stockKind === "sealed" ? "selected" : ""}>Lacrados</option>
         </select>
         <button class="solid" type="button" id="add-card">Adicionar carta</button>
@@ -790,7 +799,7 @@ create policy "ler clientes" on public.customers for select to authenticated usi
   }
 
   function openEditor(product, kind) {
-    const mode = product?.kind || kind || "single";
+    const mode = product ? displayKind(product) : (kind || "single");
     editing = product;
     draftImage = product?.image || "";
     const slot = document.getElementById("editor-slot");
@@ -1203,7 +1212,7 @@ create policy "ler clientes" on public.customers for select to authenticated usi
     const form = new FormData(event.target);
     const row = {
       id: String(form.get("id") || "").trim(),
-      kind: form.get("kind"),
+      kind: form.get("kind") === "presale" ? "sealed" : form.get("kind"),
       name: String(form.get("name") || "").trim(),
       set_id: form.get("set_id"),
       number: String(form.get("number") || "").trim(),
