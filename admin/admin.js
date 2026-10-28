@@ -27,6 +27,10 @@
   let sealedItems = [];
   let sealedType = "Todos";
   let sealedTimer = 0;
+  let banners = [];
+  let bannersError = "";
+  let bannerEditing = null;
+  let bannerImage = "";
 
   const RARITY = {
     Common: "Comum",
@@ -349,6 +353,7 @@
             ${item("stock", "Vitrine", "Vitrine", "/assets/icons/cards.png")}
             ${item("estoque", "Estoque", "Estoque", "/assets/icons/sealed.png")}
             ${item("sets", "Coleções", "Coleções", "/assets/icons/sets.png")}
+            ${item("banners", "Banners", "Banners", "/assets/icons/banners.svg")}
             ${item("visits", "Visitas", "Visitas", "/assets/icons/search.png")}
             ${item("clients", "Clientes", "Clientes", "/assets/icons/visits-people.svg")}
           </nav>
@@ -469,19 +474,27 @@ create policy "registrar visita" on public.visits for insert to anon, authentica
 create policy "ler visitas" on public.visits for select to authenticated using (true);</pre>` : "";
       return shell("Visitas", "Quantas pessoas entraram no catálogo.", `<section class="panel"><p class="msg">${esc(visitsError)}</p>${sql}</section>`);
     }
+    const visitDay = (value) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(value));
     const { from, to } = visitWindow();
-    const rows = visits.filter((visit) => {
+    const inRange = visits.filter((visit) => {
       const when = new Date(visit.created_at);
       if (from && when < from) return false;
       if (to && when > to) return false;
       return true;
     });
+    const seenDay = new Set();
+    const rows = inRange.filter((visit) => {
+      const key = `${visit.visitor}|${visitDay(visit.created_at)}`;
+      if (!visit.visitor || seenDay.has(key)) return false;
+      seenDay.add(key);
+      return true;
+    });
     const people = new Set(rows.map((visit) => visit.visitor).filter(Boolean));
-    const todayKey = new Date().toISOString().slice(0, 10);
-    const todayPeople = new Set(rows.filter((visit) => String(visit.created_at).slice(0, 10) === todayKey).map((visit) => visit.visitor));
+    const todayKey = visitDay(new Date());
+    const todayPeople = new Set(rows.filter((visit) => visitDay(visit.created_at) === todayKey).map((visit) => visit.visitor));
     const perDay = new Map();
     rows.forEach((visit) => {
-      const key = String(visit.created_at).slice(0, 10);
+      const key = visitDay(visit.created_at);
       if (!perDay.has(key)) perDay.set(key, new Set());
       if (visit.visitor) perDay.get(key).add(visit.visitor);
     });
@@ -513,7 +526,7 @@ create policy "ler visitas" on public.visits for select to authenticated using (
       </div>
       <div class="stats">
         <article class="stat dark"><img src="/assets/icons/visits-people.svg" alt="" /><span>Pessoas</span><b>${people.size}</b></article>
-        <article class="stat"><img src="/assets/icons/visits-pages.svg" alt="" /><span>Páginas vistas</span><b>${rows.length}</b></article>
+        <article class="stat"><img src="/assets/icons/visits-pages.svg" alt="" /><span>Visitas</span><b>${rows.length}</b></article>
         <article class="stat"><img src="/assets/icons/visits-today.svg" alt="" /><span>Hoje</span><b>${todayPeople.size}</b></article>
       </div>
       <section class="panel">
@@ -592,6 +605,79 @@ create policy "ler clientes" on public.customers for select to authenticated usi
       <div class="plist" id="plist">${productRows(stockList())}</div>`);
   }
 
+  const BANNER_SQL = `create table if not exists public.banners (
+  id text primary key,
+  image text not null default '',
+  href text not null default '#/',
+  label text not null default '',
+  scroll text not null default '',
+  sort integer not null default 0
+);
+alter table public.banners enable row level security;
+drop policy if exists "leitura publica banners" on public.banners;
+drop policy if exists "escrita autenticada banners" on public.banners;
+create policy "leitura publica banners" on public.banners for select using (true);
+create policy "escrita autenticada banners" on public.banners for all to authenticated using (true) with check (true);`;
+
+  function bannerWhere(row) {
+    if (row.scroll === "loja-prevenda") return "Pré-venda";
+    if (row.scroll === "loja-lacrados") return "Lacrados";
+    if (row.scroll === "loja-avulsos") return "Avulsos";
+    if (row.scroll === "loja-alta") return "Em alta e caros";
+    if (row.href === shop.jamble) return "Jamble";
+    if (/^https?:/i.test(row.href || "")) return String(row.href).replace(/^https?:\/\//, "");
+    if (row.href === "#/pokecast") return "Pokecast";
+    if (row.href === "#/colecoes") return "Coleções";
+    if (row.href === "#/contato") return "Contato";
+    if (row.href === "#/sobre") return "Sobre";
+    return "Catálogo";
+  }
+
+  function destOf(row) {
+    if (!row) return "pokecast";
+    if (row.scroll === "loja-prevenda") return "prevenda";
+    if (row.scroll === "loja-lacrados") return "lacrados";
+    if (row.scroll === "loja-avulsos") return "avulsos";
+    if (row.scroll === "loja-alta") return "alta";
+    if (row.href === shop.jamble) return "jamble";
+    if (row.href === "#/pokecast") return "pokecast";
+    if (row.href === "#/colecoes") return "colecoes";
+    if (row.href === "#/contato") return "contato";
+    if (row.href === "#/sobre") return "sobre";
+    if (row.href === "#/" || row.href === "#") return "home";
+    if (/^https?:/i.test(row.href || "")) return "external";
+    return "external";
+  }
+
+  function bannerRows() {
+    if (!banners.length) return `<p class="empty">Nenhum banner na loja.</p>`;
+    return banners.map((row) => `
+      <div class="prow">
+        <button class="prow-open" type="button" data-banner-edit="${esc(row.id)}">
+          <img class="banner-shot" src="${esc(row.image)}" alt="" />
+          <span><strong>${esc(row.label || "Sem nome")}</strong><span>${esc(bannerWhere(row))}</span></span>
+        </button>
+        <div class="row-actions">
+          <button class="ghost row-edit" type="button" data-banner-up="${esc(row.id)}" aria-label="Subir">↑</button>
+          <button class="ghost row-edit" type="button" data-banner-down="${esc(row.id)}" aria-label="Descer">↓</button>
+          <button class="ghost danger row-delete" type="button" data-banner-remove="${esc(row.id)}">Excluir</button>
+        </div>
+      </div>`).join("");
+  }
+
+  function bannersView() {
+    if (bannersError) {
+      const sql = /banners|schema cache|relation/i.test(bannersError) ? `<p>Rode no SQL Editor:</p><pre class="sql">${esc(BANNER_SQL)}</pre>` : "";
+      return shell("Banners", "Imagens do topo da loja.", `<section class="panel"><p class="msg">${esc(bannersError)}</p>${sql}</section>`);
+    }
+    return shell("Banners", "A ordem daqui é a ordem do carrossel.", `
+      <div class="toolbar">
+        <button class="solid" type="button" id="add-banner">Adicionar banner</button>
+      </div>
+      <div id="editor-slot"></div>
+      <div class="plist" id="banner-list">${bannerRows()}</div>`);
+  }
+
   function setsView() {
     return shell("Coleções", "Escreva o nome para ver a coleção.", `
       <div class="set-pick">
@@ -610,7 +696,7 @@ create policy "ler clientes" on public.customers for select to authenticated usi
 
   function bindDesk() {
     root.querySelectorAll("[data-view]").forEach((button) => {
-      button.onclick = () => { view = button.dataset.view; editing = null; paintDesk(); };
+      button.onclick = () => { view = button.dataset.view; editing = null; bannerEditing = null; paintDesk(); };
     });
     document.getElementById("sair").onclick = async () => { await sb.auth.signOut(); session = null; paint(); };
     const openNew = async (kind) => {
@@ -629,6 +715,24 @@ create policy "ler clientes" on public.customers for select to authenticated usi
     if (!root.dataset.rows) {
       root.dataset.rows = "1";
       root.addEventListener("click", async (event) => {
+      const bannerRemove = event.target.closest("[data-banner-remove]");
+      if (bannerRemove) {
+        event.preventDefault();
+        const row = banners.find((item) => item.id === bannerRemove.dataset.bannerRemove);
+        if (row && confirm(`Excluir o banner ${row.label || ""}?`.trim())) await removeBanner(row.id);
+        return;
+      }
+      const bannerUp = event.target.closest("[data-banner-up]");
+      if (bannerUp) { event.preventDefault(); await moveBanner(bannerUp.dataset.bannerUp, -1); return; }
+      const bannerDown = event.target.closest("[data-banner-down]");
+      if (bannerDown) { event.preventDefault(); await moveBanner(bannerDown.dataset.bannerDown, 1); return; }
+      const bannerEdit = event.target.closest("[data-banner-edit]");
+      if (bannerEdit) {
+        event.preventDefault();
+        bannerEditing = bannerEdit.dataset.bannerEdit;
+        openBannerForm(banners.find((item) => item.id === bannerEditing));
+        return;
+      }
       const removeBtn = event.target.closest("[data-remove]");
       if (removeBtn) {
         event.preventDefault();
@@ -688,6 +792,8 @@ create policy "ler clientes" on public.customers for select to authenticated usi
     }
     const setForm = document.getElementById("set-form");
     if (setForm) setForm.addEventListener("submit", saveSet);
+    const addBanner = document.getElementById("add-banner");
+    if (addBanner) addBanner.onclick = () => { bannerEditing = "new"; openBannerForm(null); };
   }
 
   async function paintDesk() {
@@ -705,10 +811,180 @@ create policy "ler clientes" on public.customers for select to authenticated usi
       customers = result.data || [];
       customersError = result.error ? result.error.message : "";
     }
-    const viewHtml = view === "clients" ? clientsView() : view === "visits" ? visitsView() : view === "sets" ? setsView() : view === "stock" ? stockView() : view === "estoque" ? estoqueView() : homeView();
+    if (view === "banners") await loadBanners();
+    const views = { clients: clientsView, visits: visitsView, sets: setsView, stock: stockView, estoque: estoqueView, banners: bannersView };
+    const viewHtml = (views[view] || homeView)();
     root.innerHTML = viewHtml;
     bindDesk();
     if (view === "stock" && editing) openEditor(editing);
+    if (view === "banners" && bannerEditing) openBannerForm(bannerEditing === "new" ? null : banners.find((item) => item.id === bannerEditing));
+  }
+
+  async function loadBanners() {
+    const result = await sb.from("banners").select("id,image,href,label,scroll,sort").order("sort");
+    bannersError = result.error ? result.error.message : "";
+    let rows = result.data || [];
+    if (!bannersError && !rows.some((row) => row.id === "__ready")) {
+      const seed = (shop.banners || []).map((item, index) => ({
+        id: plainField(item.id, 40),
+        image: safeImage(item.image),
+        href: bannerHref(item.href),
+        label: plainField(item.label, 120),
+        scroll: plainField(item.scroll, 40),
+        sort: index,
+      })).filter((item) => item.id && item.image);
+      if (!seed.length) {
+        banners = [];
+        return;
+      }
+      const ready = { id: "__ready", image: "", href: "#/", label: "", scroll: "", sort: 1000 };
+      const saved = await sb.from("banners").upsert(seed.concat(ready));
+      if (saved.error) {
+        bannersError = saved.error.message;
+        banners = [];
+        return;
+      }
+      const again = await sb.from("banners").select("id,image,href,label,scroll,sort").order("sort");
+      bannersError = again.error ? again.error.message : "";
+      rows = again.data || [];
+    }
+    banners = rows.filter((row) => row.id !== "__ready");
+  }
+
+  function bannerHref(value) {
+    const href = plainField(value, 500);
+    if (href.startsWith("#/") && !/[\s<>"']/.test(href)) return href;
+    if (href === "#") return "#/";
+    if (/^https:\/\/[^\s<>"']+$/i.test(href)) return href;
+    return "";
+  }
+
+  function bannerDest(dest, url) {
+    const map = {
+      pokecast: ["#/pokecast", ""],
+      jamble: [shop.jamble, ""],
+      prevenda: ["#/", "loja-prevenda"],
+      lacrados: ["#/", "loja-lacrados"],
+      avulsos: ["#/", "loja-avulsos"],
+      alta: ["#/", "loja-alta"],
+      home: ["#/", ""],
+      colecoes: ["#/colecoes", ""],
+      contato: ["#/contato", ""],
+      sobre: ["#/sobre", ""],
+    };
+    if (dest === "external") return [bannerHref(url), ""];
+    return map[dest] || ["", ""];
+  }
+
+  function openBannerForm(row) {
+    const slot = document.getElementById("editor-slot");
+    if (!slot) return;
+    bannerImage = row?.image || "";
+    const dest = destOf(row);
+    const options = [
+      ["pokecast", "Pokecast"],
+      ["jamble", "Jamble"],
+      ["prevenda", "Pré-venda"],
+      ["lacrados", "Lacrados"],
+      ["avulsos", "Avulsos"],
+      ["alta", "Em alta e caros"],
+      ["home", "Catálogo"],
+      ["colecoes", "Coleções"],
+      ["contato", "Contato"],
+      ["sobre", "Sobre"],
+      ["external", "Link externo"],
+    ];
+    slot.innerHTML = `<div class="panel" style="box-shadow:none">
+      <form id="banner-form" class="fields">
+        <img class="banner-preview" id="banner-preview" alt="" ${bannerImage ? `src="${esc(bannerImage)}"` : "hidden"} />
+        <label class="ghost photo-btn">Escolher imagem<input id="banner-file" type="file" accept="image/*" hidden /></label>
+        ${field("label", "Nome", row?.label || "")}
+        <label>Leva para
+          <select name="dest" id="banner-dest">
+            ${options.map(([value, label]) => `<option value="${value}"${value === dest ? " selected" : ""}>${label}</option>`).join("")}
+          </select>
+        </label>
+        <label id="banner-url-wrap"${dest === "external" ? "" : " hidden"}>Endereço<input name="url" type="url" placeholder="https://" value="${esc(dest === "external" ? row?.href || "" : "")}" /></label>
+        <div class="actions">
+          <button class="solid" type="submit">${row ? "Salvar banner" : "Adicionar banner"}</button>
+          <button class="ghost" type="button" id="banner-cancel">Cancelar</button>
+        </div>
+      </form>
+    </div>`;
+    const urlWrap = document.getElementById("banner-url-wrap");
+    document.getElementById("banner-dest").onchange = (event) => { urlWrap.hidden = event.target.value !== "external"; };
+    document.getElementById("banner-cancel").onclick = () => { bannerEditing = null; slot.innerHTML = ""; };
+    document.getElementById("banner-file").addEventListener("change", async (event) => {
+      const file = event.target.files && event.target.files[0];
+      const msg = document.getElementById("desk-msg");
+      if (!file) return;
+      try {
+        bannerImage = await readBanner(file);
+        const preview = document.getElementById("banner-preview");
+        preview.src = bannerImage;
+        preview.hidden = false;
+      } catch (error) {
+        if (msg) msg.textContent = error.message;
+      }
+    });
+    document.getElementById("banner-form").addEventListener("submit", (event) => saveBanner(event, row));
+  }
+
+  function readBanner(file) {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      const url = URL.createObjectURL(file);
+      image.onload = () => {
+        const scale = Math.min(1, 1024 / image.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL("image/jpeg", 0.86));
+      };
+      image.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Não foi possível ler a imagem.")); };
+      image.src = url;
+    });
+  }
+
+  async function saveBanner(event, row) {
+    event.preventDefault();
+    const form = new FormData(event.target);
+    const msg = document.getElementById("desk-msg");
+    const [href, scroll] = bannerDest(String(form.get("dest") || ""), form.get("url"));
+    const image = safeImage(bannerImage);
+    const label = plainField(form.get("label"), 120);
+    if (!image) { msg.textContent = "Escolha a imagem do banner."; return; }
+    if (!label) { msg.textContent = "Dê um nome ao banner."; return; }
+    if (!href) { msg.textContent = "O link precisa começar com https:// ou #/."; return; }
+    const sort = row ? Number(row.sort) || 0 : banners.reduce((max, item) => Math.max(max, Number(item.sort) || 0), -1) + 1;
+    const id = row ? row.id : `banner-${Date.now().toString(36)}`;
+    const { error } = await sb.from("banners").upsert({ id, image, href, label, scroll: plainField(scroll, 40), sort });
+    msg.textContent = error ? error.message : "Banner salvo.";
+    if (!error) { bannerEditing = null; bannerImage = ""; paintDesk(); }
+  }
+
+  async function removeBanner(id) {
+    const msg = document.getElementById("desk-msg");
+    const { error } = await sb.from("banners").delete().eq("id", id);
+    if (msg) msg.textContent = error ? error.message : "Banner excluído.";
+    if (!error) { bannerEditing = null; paintDesk(); }
+  }
+
+  async function moveBanner(id, dir) {
+    const list = banners.slice().sort((a, b) => Number(a.sort) - Number(b.sort) || String(a.id).localeCompare(String(b.id)));
+    const index = list.findIndex((item) => item.id === id);
+    const next = index + dir;
+    if (index < 0 || next < 0 || next >= list.length) return;
+    const swap = list[index];
+    list[index] = list[next];
+    list[next] = swap;
+    const rows = list.map((item, order) => ({ id: item.id, image: item.image, href: item.href, label: item.label, scroll: item.scroll || "", sort: order }));
+    const { error } = await sb.from("banners").upsert(rows);
+    const msg = document.getElementById("desk-msg");
+    if (error) { if (msg) msg.textContent = error.message; return; }
+    paintDesk();
   }
 
   function editSet(id) {

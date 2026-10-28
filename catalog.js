@@ -8,6 +8,13 @@ window.AMD_SHOP = {
   jambleInvite: "https://www.jamble.com/invite/buyer/allandomingues",
   instagram: "https://www.instagram.com/amdtcg/",
 
+  banners: [
+    { id: "pokecast", image: "/assets/banner-pokecast.jpg?v=2", href: "#/pokecast", label: "Pokecast, todas as quintas-feiras", scroll: "" },
+    { id: "jamble", image: "/assets/banner-jamble.jpg?v=2", href: "https://www.jamble.com/u/allandomingues", label: "AMD na Jamble, confira já", scroll: "" },
+    { id: "prevenda", image: "/assets/banner.jpg?v=9", href: "#/", label: "Pré-venda Reinado Delta", scroll: "loja-prevenda" },
+    { id: "halloween", image: "/assets/banner-trick.jpg?v=2", href: "#/", label: "Booster Bundle de Halloween", scroll: "loja-lacrados" },
+  ],
+
   sets: [
     { id: "me6", name: "Reinado Delta", en: "Delta Reign", code: "ME6" },
     { id: "trick2024", name: "Trick or Trade 2024", code: "TOT" },

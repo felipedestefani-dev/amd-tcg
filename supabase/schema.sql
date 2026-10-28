@@ -109,3 +109,39 @@ alter table public.customers drop constraint if exists customers_email_len;
 alter table public.customers add constraint customers_email_len check (char_length(email) <= 120);
 alter table public.visits drop constraint if exists visits_path_len;
 alter table public.visits add constraint visits_path_len check (char_length(path) <= 120 and char_length(visitor) <= 64 and char_length(city) <= 80);
+
+delete from public.visits a
+using public.visits b
+where a.id > b.id
+  and a.visitor = b.visitor
+  and (timezone('America/Sao_Paulo', a.created_at))::date = (timezone('America/Sao_Paulo', b.created_at))::date;
+
+create unique index if not exists visits_visitor_day
+  on public.visits (visitor, ((timezone('America/Sao_Paulo', created_at))::date));
+
+create table if not exists public.banners (
+  id text primary key,
+  image text not null default '',
+  href text not null default '#/',
+  label text not null default '',
+  scroll text not null default '',
+  sort integer not null default 0,
+  constraint banners_href_len check (char_length(href) <= 500),
+  constraint banners_label_len check (char_length(label) <= 120),
+  constraint banners_scroll_len check (char_length(scroll) <= 40)
+);
+
+alter table public.banners enable row level security;
+
+drop policy if exists "leitura publica banners" on public.banners;
+drop policy if exists "escrita autenticada banners" on public.banners;
+
+create policy "leitura publica banners"
+  on public.banners for select
+  using (true);
+
+create policy "escrita autenticada banners"
+  on public.banners for all
+  to authenticated
+  using (true)
+  with check (true);

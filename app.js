@@ -243,28 +243,38 @@
     catch { return null; }
   }
 
+  function bannerSrc(value) {
+    const src = String(value || "");
+    if (src.startsWith("data:image/jpeg;base64,")) return src;
+    if (/^(https?:\/\/|\/assets\/|assets\/)/i.test(src) && !/[\s<>"']/.test(src)) return src;
+    return "";
+  }
+
+  function bannerHref(value) {
+    const href = String(value || "");
+    if (href.startsWith("#/") && !/[\s<>"']/.test(href)) return href;
+    if (href === "#") return "#/";
+    if (/^https:\/\/[^\s<>"']+$/i.test(href)) return href;
+    return "#/";
+  }
+
   function banner() {
+    const slides = (shop.banners || []).filter((item) => bannerSrc(item.image));
+    if (!slides.length) return "";
+    const names = ["Primeiro", "Segundo", "Terceiro", "Quarto", "Quinto", "Sexto", "Sétimo", "Oitavo", "Nono", "Décimo"];
     return `
       <div class="hero">
         <div class="hero-rotator">
-          <a href="#/pokecast" aria-label="Pokecast, todas as quintas-feiras">
-            <img src="assets/banner-pokecast.jpg?v=2" alt="" />
-          </a>
-          <a href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer" aria-label="AMD na Jamble, confira já">
-            <img src="assets/banner-jamble.jpg?v=2" alt="" />
-          </a>
-          <a href="#/" data-scroll="loja-prevenda" aria-label="Pré-venda Reinado Delta">
-            <img src="assets/banner.jpg?v=9" alt="" />
-          </a>
-          <a href="#/" data-scroll="loja-lacrados" aria-label="Booster Bundle de Halloween">
-            <img src="assets/banner-trick.jpg?v=2" alt="" />
-          </a>
+          ${slides.map((item) => {
+            const href = bannerHref(item.href);
+            const external = /^https:\/\//i.test(href);
+            const scroll = !external && item.scroll ? ` data-scroll="${esc(item.scroll)}"` : "";
+            const target = external ? ` target="_blank" rel="noopener noreferrer"` : "";
+            return `<a href="${esc(href)}"${target}${scroll} aria-label="${esc(item.label || "Banner")}"><img src="${esc(bannerSrc(item.image))}" alt="" /></a>`;
+          }).join("")}
         </div>
         <div class="hero-dots">
-          <button type="button" aria-label="Primeiro banner"></button>
-          <button type="button" aria-label="Segundo banner"></button>
-          <button type="button" aria-label="Terceiro banner"></button>
-          <button type="button" aria-label="Quarto banner"></button>
+          ${slides.map((_, index) => `<button type="button" aria-label="${esc(names[index] || `Banner ${index + 1}`)} banner"></button>`).join("")}
         </div>
       </div>`;
   }
@@ -380,6 +390,21 @@
     return `<a class="back" href="${esc(href)}"${scroll ? ` data-scroll="${scroll}"` : ""}><img src="assets/icons/back.png" alt="" />Voltar</a>`;
   }
 
+  function nextThursdays(count) {
+    const dates = [];
+    const cursor = new Date();
+    cursor.setHours(12, 0, 0, 0);
+    const add = (4 - cursor.getDay() + 7) % 7;
+    cursor.setDate(cursor.getDate() + add);
+    const first = new Date(2026, 10, 5, 12, 0, 0);
+    if (cursor < first) cursor.setTime(first.getTime());
+    for (let i = 0; i < count; i += 1) {
+      dates.push(new Date(cursor));
+      cursor.setDate(cursor.getDate() + 7);
+    }
+    return dates;
+  }
+
   function listPage(title, lede, items, from, mark) {
     const body = items.length
       ? `<div class="grid">${items.map((product) => cardHtml(product, from)).join("")}</div>`
@@ -391,12 +416,15 @@
   }
 
   const tracking = new Set();
+  function saoPauloDay() {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  }
   function trackVisit() {
     if (localStorage.getItem("amd.cookies") !== "all") return;
+    const day = saoPauloDay();
+    if (localStorage.getItem("amd.visitDay") === day || tracking.has(day)) return;
+    tracking.add(day);
     const path = location.hash || "#/";
-    const seen = (sessionStorage.getItem("amd.tracked") || "").split("|").filter(Boolean);
-    if (seen.includes(path) || tracking.has(path)) return;
-    tracking.add(path);
     const localId = localStorage.getItem("amd.visitor") || crypto.randomUUID();
     localStorage.setItem("amd.visitor", localId);
     let sent = false;
@@ -404,15 +432,15 @@
       if (sent) return;
       sent = true;
       window.AMD_SB.client().then(async (sb) => {
-        if (!sb) { sent = false; tracking.delete(path); return; }
+        if (!sb) { sent = false; tracking.delete(day); return; }
         const { error } = await sb.from("visits").insert({
           path: plainField(path, 120) || "#/",
           visitor: plainField(visitor, 64),
           city: plainField(city, 80),
         });
-        if (error) { sent = false; tracking.delete(path); return; }
-        sessionStorage.setItem("amd.tracked", seen.concat(path).join("|"));
-      }).catch(() => { sent = false; tracking.delete(path); });
+        if (error && error.code !== "23505") { sent = false; tracking.delete(day); return; }
+        localStorage.setItem("amd.visitDay", day);
+      }).catch(() => { sent = false; tracking.delete(day); });
     };
     const cachedIp = sessionStorage.getItem("amd.ip");
     if (cachedIp) { send(cachedIp, sessionStorage.getItem("amd.city") || ""); return; }
@@ -645,13 +673,33 @@
 
     if (name === "pokecast") {
       document.title = "Pokecast · A.M.D TCG";
+      const thursdays = nextThursdays(4);
+      const when = (date) => date.toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
+      const upcoming = thursdays.slice(1).map((date) => `
+        <article class="quinta">
+          <strong>${esc(when(date))}</strong>
+          <span>Convidado a anunciar</span>
+        </article>`).join("");
       main.innerHTML = `
+        <img class="poke-banner" src="assets/banner-pokecast.jpg?v=2" alt="Pokecast, todas as quintas-feiras" />
         <h1 class="page-title">Pokecast</h1>
-        <p class="lede">O podcast de Pokémon TCG do @allandomingues.</p>
-        <div class="sets">
-          <a class="set-link" href="${esc(shop.whatsappGroup)}" target="_blank" rel="noopener noreferrer"><strong>Grupo do WhatsApp</strong><span>Avisos dos episódios</span></a>
-          <a class="set-link" href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer"><strong>Lives na Jamble</strong><span>@allandomingues</span></a>
-        </div>`;
+        <p class="lede">Toda quinta-feira na Jamble, com um convidado diferente.</p>
+        <section class="shelf">
+          <div class="section-head"><h2>Esta quinta</h2></div>
+          <p class="lede">${esc(when(thursdays[0]))}. Convidado a anunciar.</p>
+          <div class="sets">
+            <a class="set-link" href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer"><img class="brand-mark" src="assets/icons/jamble.jpg?v=3" alt="" /><strong>Assistir na Jamble</strong><span>@allandomingues</span></a>
+            <a class="set-link" href="${esc(shop.whatsappGroup)}" target="_blank" rel="noopener noreferrer"><img class="brand-mark" src="assets/icons/whatsapp.svg" alt="" /><strong>Grupo do WhatsApp</strong><span>Aviso do episódio</span></a>
+          </div>
+        </section>
+        <section class="shelf">
+          <div class="section-head"><h2>Próximas quintas</h2></div>
+          <div class="quintas">${upcoming}</div>
+        </section>
+        <section class="shelf">
+          <div class="section-head"><h2>Episódios</h2></div>
+          <p class="empty">Os episódios aparecem aqui depois de cada quinta.</p>
+        </section>`;
       return;
     }
 
@@ -1144,10 +1192,20 @@
     try {
       const sb = await window.AMD_SB.client();
       if (!sb) return;
-      const [{ data: sets, error: setError }, { data: products, error: productError }] = await Promise.all([
+      const [{ data: sets, error: setError }, { data: products, error: productError }, bannerResult] = await Promise.all([
         sb.from("sets").select("id,name,code,sort").order("sort"),
         sb.from("products").select("id,kind,name,set_id,number,rarity,condition,lang,finish,qty,price,image").order("name"),
+        sb.from("banners").select("id,image,href,label,scroll,sort").order("sort"),
       ]);
+      if (bannerResult && !bannerResult.error && Array.isArray(bannerResult.data) && bannerResult.data.length) {
+        shop.banners = bannerResult.data.filter((row) => row.id !== "__ready" && row.image).map((row) => ({
+          id: row.id,
+          image: row.image,
+          href: row.href || "#/",
+          label: row.label || "",
+          scroll: row.scroll || "",
+        }));
+      }
       let rows = products;
       let rowsError = productError;
       if (rowsError && /image/.test(rowsError.message || "")) {
