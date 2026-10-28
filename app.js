@@ -218,8 +218,12 @@
           <a href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer" aria-label="AMD na Jamble, confira já">
             <img src="assets/banner-jamble.jpg?v=2" alt="" />
           </a>
-          <img src="assets/banner.jpg?v=9" alt="Pré-venda disponível: Megaevolução Reinado Delta" />
-          <img src="assets/banner-trick.jpg?v=2" alt="Halloween 2024 disponível: Trick or Trade" />
+          <a href="#/" data-scroll="loja-prevenda" aria-label="Pré-venda Reinado Delta">
+            <img src="assets/banner.jpg?v=9" alt="" />
+          </a>
+          <a href="#/" data-scroll="loja-lacrados" aria-label="Booster Bundle de Halloween">
+            <img src="assets/banner-trick.jpg?v=2" alt="" />
+          </a>
         </div>
         <div class="hero-dots">
           <button type="button" aria-label="Primeiro banner"></button>
@@ -1102,6 +1106,12 @@
   }
 
   document.addEventListener("click", (event) => {
+    const banner = event.target.closest("a[data-scroll]");
+    if (banner) {
+      event.preventDefault();
+      revealSection(banner.dataset.scroll);
+      return;
+    }
     const button = event.target.closest("[data-jump]");
     if (!button) return;
     document.querySelectorAll("[data-jump]").forEach((item) => item.classList.remove("is-on"));
