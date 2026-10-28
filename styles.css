@@ -14,7 +14,7 @@
 *::before,
 *::after { box-sizing: border-box; }
 
-html { overflow-x: clip; }
+html { overflow-x: clip; touch-action: manipulation; }
 
 .boot {
   position: fixed;
@@ -336,6 +336,7 @@ button, input, select { font: inherit; color: inherit; }
   border-radius: 0;
   overflow: hidden;
   background: #2a0204;
+  touch-action: pan-y;
 }
 .hero-dots {
   display: flex;

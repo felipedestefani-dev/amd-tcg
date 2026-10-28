@@ -443,6 +443,35 @@
         start();
       };
     });
+    let startX = 0;
+    let startY = 0;
+    let tracking = false;
+    let swiped = false;
+    box.addEventListener("pointerdown", (event) => {
+      if (event.pointerType !== "touch" || slides.length < 2) return;
+      startX = event.clientX;
+      startY = event.clientY;
+      tracking = true;
+      swiped = false;
+    });
+    box.addEventListener("pointerup", (event) => {
+      if (!tracking || event.pointerType !== "touch") return;
+      tracking = false;
+      const dx = event.clientX - startX;
+      const dy = event.clientY - startY;
+      if (Math.abs(dx) < 36 || Math.abs(dx) < Math.abs(dy)) return;
+      swiped = true;
+      index = dx < 0 ? (index + 1) % slides.length : (index - 1 + slides.length) % slides.length;
+      show();
+      start();
+    });
+    box.addEventListener("pointercancel", () => { tracking = false; });
+    box.addEventListener("click", (event) => {
+      if (!swiped) return;
+      event.preventDefault();
+      event.stopPropagation();
+      swiped = false;
+    }, true);
   }
 
   function render() {
