@@ -218,8 +218,8 @@
           <a href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer" aria-label="AMD na Jamble, confira já">
             <img src="assets/banner-jamble.jpg?v=2" alt="" />
           </a>
-          <img src="assets/banner-trick.jpg?v=2" alt="Halloween 2024 disponível: Trick or Trade" />
           <img src="assets/banner.jpg?v=9" alt="Pré-venda disponível: Megaevolução Reinado Delta" />
+          <img src="assets/banner-trick.jpg?v=2" alt="Halloween 2024 disponível: Trick or Trade" />
         </div>
         <div class="hero-dots">
           <button type="button" aria-label="Primeiro banner"></button>

@@ -372,6 +372,14 @@ button, input, select { font: inherit; color: inherit; }
   object-fit: contain;
   object-position: center;
 }
+@media (min-width: 1080px) {
+  .hero {
+    width: min(1024px, 100%);
+    max-width: 1024px;
+    margin: 0 auto 1.15rem;
+  }
+  .hero-rotator { border-radius: 16px; }
+}
 .banner h2 { margin: 0 0 0.2rem; font-size: 1.15rem; letter-spacing: -0.03em; }
 .banner p, .lede, .note, .foot { color: var(--muted); }
 .banner p { margin: 0; }
