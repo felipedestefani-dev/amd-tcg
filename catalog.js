@@ -9,6 +9,7 @@ window.AMD_SHOP = {
 
   sets: [
     { id: "me6", name: "Reinado Delta", en: "Delta Reign", code: "ME6" },
+    { id: "trick2024", name: "Trick or Trade 2024", code: "TOT" },
     { id: "cbb1c", name: "Gem Pack Volume 1", code: "CBB1C" },
     { id: "bkpromo", name: "Burger King Promos", code: "BK-P" },
     { id: "me55", name: "Celebração de 30 Anos", en: "30th Celebration", code: "30C" },
@@ -195,6 +196,7 @@ window.AMD_SHOP = {
     {"id":"me6-box","kind":"presale","name":"Booster Box","set":"me6","number":"","rarity":"","condition":"Lacrado","lang":"PT","finish":"Lacrado","qty":8,"price":440,"image":"assets/products/me6-box.jpg?v=2"},
     {"id":"me6-combo","kind":"presale","name":"Combo de Boosters","set":"me6","number":"","rarity":"","condition":"Lacrado","lang":"PT","finish":"Lacrado","qty":10,"price":270,"image":"assets/products/me6-combo.jpg?v=2"},
     {"id":"me6-etb","kind":"presale","name":"ETB","set":"me6","number":"","rarity":"","condition":"Lacrado","lang":"PT","finish":"Lacrado","qty":3,"price":400,"image":"assets/products/me6-etb.jpg?v=2"},
+    {"id":"trick-2024","kind":"sealed","name":"Booster Bundle","set":"trick2024","number":"","rarity":"","condition":"Lacrado","lang":"EN","finish":"Sob encomenda","qty":0,"price":0,"image":"assets/products/trick-2024.jpg"},
     {"id":"vc-11793592","kind":"single","name":"Pikachu Aniversariante","set":"basep","number":"024/53","rarity":"","condition":"SP","lang":"EN","finish":"Promo","qty":1,"price":9900,"image":"assets/cards/vc-11793592.jpg"},
     {"id":"vc-11794570","kind":"single","name":"Nidoking","set":"base1","number":"011/102","rarity":"","condition":"SP","lang":"EN","finish":"Foil","qty":1,"price":2200,"image":"assets/cards/vc-11794570.jpg"},
     {"id":"vc-11794430","kind":"single","name":"Pichu","set":"neo1","number":"012/111","rarity":"","condition":"SP","lang":"EN","finish":"Foil","qty":1,"price":1050,"image":"assets/cards/vc-11794430.jpg"},

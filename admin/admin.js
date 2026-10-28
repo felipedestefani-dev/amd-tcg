@@ -361,7 +361,7 @@
     const sealed = catalog.filter((product) => displayKind(product) === "sealed");
     const units = catalog.reduce((sum, product) => sum + Number(product.qty || 0), 0);
     const value = catalog.reduce((sum, product) => sum + Number(product.price || 0) * Number(product.qty || 0), 0);
-    const low = catalog.filter((product) => Number(product.qty) <= 1).slice(0, 6);
+    const low = catalog.filter((product) => product.finish !== "Sob encomenda" && Number(product.qty) <= 1).slice(0, 6);
     return shell("Visão geral", session.user.email, `
       <div class="stats">
         <article class="stat"><span>Itens</span><b>${catalog.length}</b></article>
@@ -385,6 +385,7 @@
     const query = stockQuery.trim().toLowerCase();
     return catalog.filter((product) => {
       const qty = Number(product.qty);
+      if (product.finish === "Sob encomenda" && (stockLevel === "low" || stockLevel === "out")) return false;
       if (stockLevel === "low" && qty > 1) return false;
       if (stockLevel === "out" && qty > 0) return false;
       if (!query) return true;
@@ -400,8 +401,8 @@
       <div class="stats">
         <article class="stat"><span>Unidades</span><b>${units}</b></article>
         <article class="stat"><span>Valor</span><b>${money(value)}</b></article>
-        <article class="stat"><span>Baixo</span><b>${catalog.filter((product) => Number(product.qty) <= 1).length}</b></article>
-        <article class="stat"><span>Zerado</span><b>${catalog.filter((product) => Number(product.qty) === 0).length}</b></article>
+        <article class="stat"><span>Baixo</span><b>${catalog.filter((product) => product.finish !== "Sob encomenda" && Number(product.qty) <= 1).length}</b></article>
+        <article class="stat"><span>Zerado</span><b>${catalog.filter((product) => product.finish !== "Sob encomenda" && Number(product.qty) === 0).length}</b></article>
       </div>
       <div class="toolbar">
         <input id="stock-q" type="search" placeholder="Buscar no estoque" value="${esc(stockQuery)}" />

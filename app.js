@@ -86,8 +86,19 @@
     return Number(value) || 0;
   }
 
-  function priceHtml(value) {
-    return esc(money(payPrice(value)));
+  function onOrder(product) {
+    return product.finish === "Sob encomenda";
+  }
+
+  function buyLabel(product) {
+    if (onOrder(product)) return "Encomendar";
+    if (product.kind === "presale") return "Reservar";
+    return "Comprar";
+  }
+
+  function priceHtml(product) {
+    if (onOrder(product) && !Number(product.price)) return "Sob encomenda";
+    return esc(money(payPrice(product.price)));
   }
 
   function money(value) {
@@ -119,13 +130,14 @@
   function orderText(product) {
     const set = setOf(product.set);
     const code = product.number ? ` ${numberLabel(product.number)}` : "";
-    return [
-      product.kind === "presale" ? "Olá! Quero reservar a pré-venda:" : "Olá! Quero reservar:",
+    const lines = [
+      onOrder(product) ? "Olá! Quero encomendar:" : product.kind === "presale" ? "Olá! Quero reservar a pré-venda:" : "Olá! Quero reservar:",
       `${product.name}${code}`,
-      `${set.name} · ${product.lang} · ${product.condition} · ${product.finish}`,
-      money(payPrice(product.price)),
-      "Ainda está disponível?",
-    ].join("\n");
+      `${set.name} · ${product.lang} · ${product.condition}`,
+    ];
+    if (!onOrder(product)) lines.push(product.finish, money(payPrice(product.price)));
+    lines.push(onOrder(product) ? "Consegue encomendar?" : "Ainda está disponível?");
+    return lines.join("\n");
   }
 
   function waLink(product) {
@@ -170,12 +182,12 @@
           <div class="card-body">
             <h3>${esc(product.name)}</h3>
             <p class="setline">${esc(set.name)}${number}</p>
-            <p class="tags"><span>${esc(product.condition)}</span>${flagOf(product.lang)}${product.finish && product.finish !== product.condition ? `<span>${esc(product.finish)}</span>` : ""}<span>${product.qty} un.</span></p>
-            <p class="price">${priceHtml(product.price)}</p>
+            <p class="tags"><span>${esc(product.condition)}</span>${flagOf(product.lang)}${product.finish && product.finish !== product.condition && !onOrder(product) ? `<span>${esc(product.finish)}</span>` : ""}<span>${onOrder(product) ? "Sob encomenda" : `${product.qty} un.`}</span></p>
+            <p class="price">${priceHtml(product)}</p>
           </div>
         </a>
         <a class="buy" href="${esc(waLink(product))}" target="_blank" rel="noopener noreferrer">
-          <img src="${I.buy}" alt="" />${product.kind === "presale" ? "Reservar" : "Comprar"}
+          <img src="${I.buy}" alt="" />${buyLabel(product)}
         </a>
       </article>`;
   }
@@ -203,10 +215,10 @@
     return `
       <div class="hero">
         <div class="hero-rotator">
-          <img src="assets/banner-trick.jpg?v=2" alt="Halloween 2024 disponível: Trick or Trade" />
           <a href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer" aria-label="AMD na Jamble, confira já">
             <img src="assets/banner-jamble.jpg?v=2" alt="" />
           </a>
+          <img src="assets/banner-trick.jpg?v=2" alt="Halloween 2024 disponível: Trick or Trade" />
           <img src="assets/banner.jpg?v=9" alt="Pré-venda disponível: Megaevolução Reinado Delta" />
         </div>
         <div class="hero-dots">
@@ -473,18 +485,18 @@
           <div>
             <p class="kicker">${esc(set.name)}${product.number ? " · " + esc(numberLabel(product.number)) : ""}</p>
             <h1>${esc(product.name)}</h1>
-            <p class="price">${priceHtml(product.price)}</p>
+            <p class="price">${priceHtml(product)}</p>
             <table class="specs">
               <tr><th>Tipo</th><td>${product.kind === "presale" ? "Pré-venda" : product.kind === "sealed" ? "Lacrado" : "Carta avulsa"}</td></tr>
               <tr><th>Coleção</th><td>${esc(set.name)} (${esc(set.code)})</td></tr>
-              <tr><th>Raridade</th><td>${esc(product.rarity)}</td></tr>
+              ${product.rarity ? `<tr><th>Raridade</th><td>${esc(product.rarity)}</td></tr>` : ""}
               <tr><th>Condição</th><td>${esc(product.condition)}</td></tr>
               <tr><th>Idioma</th><td>${flagOf(product.lang)}</td></tr>
-              <tr><th>Acabamento</th><td>${esc(product.finish)}</td></tr>
-              <tr><th>Quantidade</th><td>${product.qty} un.</td></tr>
+              ${onOrder(product) ? "" : `<tr><th>Acabamento</th><td>${esc(product.finish)}</td></tr>`}
+              <tr><th>Quantidade</th><td>${onOrder(product) ? "Sob encomenda" : `${product.qty} un.`}</td></tr>
             </table>
-            <a class="ask" href="${esc(waLink(product))}" target="_blank" rel="noopener noreferrer"><img src="${I.buy}" alt="" />${product.kind === "presale" ? "Reservar" : "Comprar"}</a>
-            <p class="note">${product.kind === "presale" ? "Pré-venda. Lançamento em 6 de novembro de 2026. Frete combinado no pedido." : "Frete combinado no pedido."}</p>
+            <a class="ask" href="${esc(waLink(product))}" target="_blank" rel="noopener noreferrer"><img src="${I.buy}" alt="" />${buyLabel(product)}</a>
+            <p class="note">${onOrder(product) ? "Sob encomenda. O valor e o prazo combinamos no pedido." : product.kind === "presale" ? "Pré-venda. Lançamento em 6 de novembro de 2026. Frete combinado no pedido." : "Frete combinado no pedido."}</p>
           </div>
         </article>`;
       return;
