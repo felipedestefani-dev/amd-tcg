@@ -1,6 +1,7 @@
 /* Vitrine A.M.D — edite estoque, preço e links aqui. */
 window.AMD_SHOP = {
   name: "A.M.D TCG",
+  owner: "Allan Mascarenhas Domingues",
   handle: "@allandomingues",
   whatsapp: "5511969194152",
   whatsappGroup: "https://chat.whatsapp.com/HLYawCBOc6K7rlIkm5wyVz",

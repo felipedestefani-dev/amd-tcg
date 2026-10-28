@@ -708,6 +708,15 @@ button, input, select { font: inherit; color: inherit; }
   border-radius: 16px;
   background: #2a0204;
 }
+@media (max-width: 860px) {
+  .poke-banner {
+    width: 100vw;
+    max-width: none;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    border-radius: 0;
+  }
+}
 .quadros {
   margin: 0 0 0.9rem;
   padding: 0.9rem 1rem 0.9rem 1.3rem;

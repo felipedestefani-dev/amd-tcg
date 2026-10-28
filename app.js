@@ -721,7 +721,7 @@
       document.title = "Sobre · A.M.D TCG";
       main.innerHTML = `
         <h1 class="page-title">Sobre</h1>
-        <p class="lede">Loja de Pokémon TCG do @allandomingues. Cartas avulsas e lacrados para quem coleciona e joga.</p>`;
+        <p class="lede">A A.M.D TCG comercializa cartas avulsas e produtos lacrados de Pokémon TCG. O responsável pela loja é ${esc(shop.owner)}.</p>`;
       return;
     }
 
@@ -801,133 +801,122 @@
 
   function legalPage(name) {
     const updated = "28 de outubro de 2026";
+    const owner = esc(shop.owner);
+    const wa = `<a href="https://api.whatsapp.com/send?phone=5511969194152">WhatsApp</a>`;
     const pages = {
       privacidade: {
-        title: "Política de privacidade",
+        title: "Política de Privacidade",
         body: `
-          <p>Esta política explica o que a A.M.D TCG faz com os dados de quem usa a loja. Ela vale para o site e segue a Lei Geral de Proteção de Dados (Lei nº 13.709/2018).</p>
-          <h2>Quem é responsável</h2>
-          <p>A loja é a A.M.D TCG, do @allandomingues. Para falar sobre seus dados, chame no WhatsApp <a href="https://api.whatsapp.com/send?phone=5511969194152">11 96919-4152</a>.</p>
-          <h2>Quais dados usamos</h2>
+          <p>Esta Política descreve o tratamento de dados pessoais realizado no site da A.M.D TCG, em conformidade com a Lei nº 13.709, de 14 de agosto de 2018 (Lei Geral de Proteção de Dados Pessoais).</p>
+          <h2>Controlador</h2>
+          <p>O controlador, nos termos do art. 5º, inciso VI, da Lei nº 13.709/2018, é ${owner}, responsável pela A.M.D TCG. Requerimentos sobre dados pessoais devem ser encaminhados pelo ${wa}, no número 11 96919-4152.</p>
+          <h2>Dados tratados</h2>
           <ul>
-            <li>Conta: nome, e-mail, telefone e senha. A senha fica protegida no serviço de acesso e a loja não vê a senha em texto aberto.</li>
-            <li>Pedido: ao tocar em Comprar, o WhatsApp abre com o produto, a coleção, o idioma, a condição, o acabamento e o preço. Essa conversa segue as regras do WhatsApp.</li>
-            <li>Visita, só se você aceitar: página vista, endereço IP e cidade aproximada, para saber quantas pessoas entram na loja.</li>
-            <li>Aparelho: a sessão da conta fica guardada neste navegador até você fechar a aba.</li>
+            <li>Cadastro: nome, endereço de e-mail, telefone e senha. A senha permanece protegida no serviço de autenticação e não é acessada em texto aberto pela loja.</li>
+            <li>Pedido: ao acionar Comprar, abre-se conversa no WhatsApp com o produto, a coleção, o idioma, a condição, o acabamento e o preço. Essa conversa observa também as regras daquela plataforma.</li>
+            <li>Visita, somente com consentimento: página acessada, endereço IP e cidade aproximada, para mensurar o acesso ao catálogo.</li>
+            <li>Sessão: registro mantido neste navegador até o encerramento da aba, para reconhecer a conta autenticada.</li>
           </ul>
-          <h2>Para que serve</h2>
-          <ul>
-            <li>Criar e manter a sua conta.</li>
-            <li>Montar a mensagem do pedido no WhatsApp.</li>
-            <li>Contar visitas, quando você aceita, para a loja entender o movimento do catálogo.</li>
-            <li>Manter o site no ar e proteger a conta contra uso indevido.</li>
-          </ul>
-          <h2>Base legal</h2>
-          <p>A conta e o pedido existem para atender a você. A visita com IP e cidade só acontece com o seu consentimento, que pode ser retirado. Dados estritamente necessários para a página abrir e para a sessão da conta se apoiam na execução do serviço.</p>
-          <h2>Com quem compartilhamos</h2>
-          <p>Não vendemos dados. O cadastro e as visitas aceitas ficam em banco de dados da Supabase. O site fica hospedado na Vercel. A cidade aproximada vem de uma consulta ao IP na ipwho.is. O pedido vai para o WhatsApp quando você toca em Comprar. Esses fornecedores podem guardar dados em servidores fora do Brasil. A loja usa isso só para o serviço descrito aqui.</p>
-          <h2>Por quanto tempo</h2>
-          <p>A conta fica enquanto você quiser mantê-la. As visitas ficam para a contagem da loja e podem ser apagadas quando você pedir. A sessão da aba some quando o navegador é fechado.</p>
-          <h2>Seus direitos</h2>
-          <p>Você pode pedir confirmação, acesso, correção, portabilidade, exclusão, informação sobre com quem os dados foram compartilhados e revogar o consentimento das visitas. O pedido é pelo WhatsApp da loja. A resposta sai em até 15 dias. Você também pode procurar a Autoridade Nacional de Proteção de Dados, em gov.br/anpd.</p>
+          <h2>Finalidades e bases legais</h2>
+          <p>O tratamento observa o art. 7º da Lei nº 13.709/2018. Cadastro, atendimento e formação do pedido apoiam-se na execução de contrato ou de procedimentos preliminares relacionados a contrato de que seja parte o titular (inciso V). O registro de visita com endereço IP e cidade apoia-se no consentimento (inciso I), que pode ser revogado a qualquer momento, de forma gratuita e facilitada, nos termos do art. 8º, § 5º. As informações prestadas ao titular observam o art. 9º da mesma lei.</p>
+          <h2>Compartilhamento</h2>
+          <p>A A.M.D TCG não comercializa dados pessoais. O cadastro e as visitas consentidas são armazenados na Supabase. O site é hospedado na Vercel. A cidade aproximada decorre de consulta do endereço IP ao serviço ipwho.is. O pedido é transmitido ao WhatsApp quando o consumidor aciona Comprar. Esses operadores podem manter dados fora do Brasil, hipótese em que a transferência observa o art. 33 da Lei nº 13.709/2018 e restringe-se às finalidades desta Política.</p>
+          <h2>Conservação</h2>
+          <p>O cadastro é mantido enquanto a conta existir. Os registros de visita permanecem para a contagem de acessos e podem ser eliminados a pedido do titular. A sessão local encerra-se com o fechamento do navegador.</p>
+          <h2>Direitos do titular</h2>
+          <p>Nos termos do art. 18 da Lei nº 13.709/2018, o titular pode requerer confirmação da existência de tratamento, acesso aos dados, correção, portabilidade, eliminação, informação sobre as entidades com as quais os dados foram compartilhados e revogação do consentimento. A declaração clara e completa será fornecida no prazo de até 15 (quinze) dias, contado do requerimento, conforme o art. 19, inciso II, da mesma lei. É facultado ao titular apresentar reclamação à Autoridade Nacional de Proteção de Dados, em gov.br/anpd.</p>
           <h2>Crianças e adolescentes</h2>
-          <p>A conta é para maiores de 18 anos. Menor de idade só deve se cadastrar com um responsável. A loja não pede dados de criança de propósito.</p>
+          <p>O cadastro destina-se a pessoas maiores de 18 (dezoito) anos. O tratamento de dados de crianças e de adolescentes observa o art. 14 da Lei nº 13.709/2018. A loja não solicita, de modo intencional, dados de crianças.</p>
           <p>Atualizada em ${updated}.</p>`,
       },
       cookies: {
-        title: "Cookies e dados no aparelho",
+        title: "Política de Cookies",
         body: `
-          <p>Este site não usa cookie de anúncio. O que fica no aparelho serve para a conta funcionar e, se você aceitar, para contar a visita.</p>
-          <h2>Necessários</h2>
+          <p>Esta Política descreve os dados armazenados no aparelho do usuário. O site não emprega cookies de publicidade. O tratamento observa a Lei nº 13.709/2018 e a <a href="#/privacidade">Política de Privacidade</a>.</p>
+          <h2>Dados necessários</h2>
+          <p>O armazenamento indispensável à conta independe de consentimento específico, porque se destina à execução do serviço solicitado pelo titular, nos termos do art. 7º, inciso V, da Lei nº 13.709/2018.</p>
           <ul>
-            <li>Sessão da conta, para saber que você entrou nesta aba.</li>
-            <li>Nome, e-mail e telefone do cadastro, para preencher a conta neste aparelho.</li>
-            <li>Sua escolha neste aviso: aceitar as visitas ou ficar só com o necessário.</li>
+            <li>Sessão da conta, para reconhecer o acesso nesta aba.</li>
+            <li>Nome, e-mail e telefone do cadastro, neste aparelho.</li>
+            <li>A opção registrada neste aviso: autorizar a contagem de visitas ou manter apenas o necessário.</li>
           </ul>
-          <h2>Somente com aceite</h2>
-          <ul>
-            <li>Página visitada, endereço IP e cidade aproximada. Isso conta as pessoas que entram na loja. Sem o aceite, essa visita não é registrada.</li>
-          </ul>
-          <h2>Como mudar de ideia</h2>
-          <p>Apague os dados deste site nas configurações do navegador. Na próxima visita o aviso aparece de novo e você escolhe outra vez. Para apagar o que já foi salvo na loja, chame no WhatsApp <a href="https://api.whatsapp.com/send?phone=5511969194152">11 96919-4152</a>.</p>
+          <h2>Dados dependentes de consentimento</h2>
+          <p>O registro da página visitada, do endereço IP e da cidade aproximada somente ocorre com consentimento, nos termos do art. 7º, inciso I, e do art. 8º da Lei nº 13.709/2018. Sem essa autorização, a visita não é registrada.</p>
+          <h2>Revogação</h2>
+          <p>O consentimento pode ser revogado a qualquer momento, nos termos do art. 8º, § 5º, da Lei nº 13.709/2018. A exclusão dos dados locais, nas configurações do navegador, faz com que o aviso seja apresentado novamente na visita seguinte. A eliminação do que já houver sido registrado pela loja deve ser solicitada pelo ${wa}.</p>
           <p>Atualizada em ${updated}.</p>`,
       },
       termos: {
-        title: "Termos de uso",
+        title: "Termos de Uso",
         body: `
-          <p>Ao usar o site da A.M.D TCG você vê o catálogo e, se quiser, pede um item pelo WhatsApp. Comprar no botão abre a conversa com a loja. O pedido se fecha nessa conversa, não aqui no site.</p>
-          <h2>Catálogo e preço</h2>
-          <p>Preço, quantidade e condição são os que estão na ficha no momento. O item pode acabar antes da confirmação. O valor do produto e a reserva são confirmados no WhatsApp. O envio segue a <a href="#/envio">Política de envio e entrega</a>. Troca, devolução, reembolso e cancelamento seguem a <a href="#/trocas">Política de trocas e devoluções</a>, a <a href="#/reembolso">Política de reembolso e cancelamento</a> e o Código de Defesa do Consumidor.</p>
+          <p>Estes Termos regulam o uso do site da A.M.D TCG. O fornecedor é ${owner}, responsável pela loja, identificado para os fins do art. 2º do Decreto nº 7.962, de 15 de março de 2013.</p>
+          <p>O site disponibiliza o catálogo. A solicitação de compra é encaminhada pelo WhatsApp, e o contrato se aperfeiçoa nessa conversa, não pelo simples acionamento do botão no site. As informações ao consumidor observam o art. 6º, inciso III, e o art. 31 da Lei nº 8.078, de 11 de setembro de 1990 (Código de Defesa do Consumidor), e o art. 4º do Decreto nº 7.962/2013.</p>
+          <h2>Oferta</h2>
+          <p>Preço, quantidade, idioma, condição e acabamento são os constantes da ficha no momento da consulta. A oferta suficientemente precisa vincula o fornecedor, nos termos do art. 30 da Lei nº 8.078/1990. O item pode esgotar-se antes da confirmação. Valor e reserva são confirmados no WhatsApp. Recusada a oferta já confirmada, aplicam-se as alternativas do art. 35 da mesma lei. Envio, troca, devolução, reembolso e cancelamento observam a <a href="#/envio">Política de Envio e Entrega</a>, a <a href="#/trocas">Política de Trocas e Devoluções</a>, a <a href="#/reembolso">Política de Reembolso e Cancelamento</a> e a Lei nº 8.078/1990.</p>
           <h2>Conta</h2>
-          <p>Os dados do cadastro precisam ser seus. A senha é sua responsabilidade. A loja pode recusar cadastro com informação falsa ou uso que atrapalhe o site e os outros clientes.</p>
-          <h2>O que não fazer</h2>
+          <p>Os dados cadastrais devem corresponder ao próprio titular. A guarda da senha incumbe ao usuário. O fornecedor pode recusar cadastro fundado em informação falsa ou em uso que prejudique o site ou terceiros.</p>
+          <h2>Condutas vedadas</h2>
           <ul>
-            <li>Usar o site para golpe, spam ou para pegar dados de outra pessoa.</li>
-            <li>Tentar invadir, copiar em massa ou quebrar o catálogo.</li>
-            <li>Publicar o conteúdo da loja como se fosse seu.</li>
+            <li>Empregar o site para fraude, comunicação não solicitada ou obtenção de dados de terceiros.</li>
+            <li>Tentar acessar, extrair em massa ou comprometer o catálogo sem autorização.</li>
+            <li>Apresentar o conteúdo da loja como de autoria própria.</li>
           </ul>
           <h2>Marcas</h2>
-          <p>Pokémon e as marcas das cartas pertencem aos seus donos. A A.M.D TCG é uma loja independente e não é a Pokémon Company, a Nintendo nem a The Pokémon Company International.</p>
-          <h2>Limite</h2>
-          <p>O site mostra o que está disponível. Atraso de operadora, falta de estoque ou instabilidade do WhatsApp não geram compra automática. A lei brasileira vale para estes termos.</p>
-          <p>Dúvida ou pedido sobre estes termos: WhatsApp <a href="https://api.whatsapp.com/send?phone=5511969194152">11 96919-4152</a>.</p>
-          <p>Atualizado em ${updated}.</p>`,
+          <p>Pokémon e as marcas apostas nas cartas pertencem aos respectivos titulares. A A.M.D TCG é estabelecimento independente e não se confunde com a Nintendo, a The Pokémon Company ou a The Pokémon Company International.</p>
+          <h2>Disposições finais</h2>
+          <p>O catálogo exibe a disponibilidade nele informada. Atraso de transportadora, falta de estoque ou indisponibilidade do WhatsApp não importam contratação automática. Aplica-se a legislação da República Federativa do Brasil. Comunicações sobre estes Termos devem ser dirigidas ao ${wa}.</p>
+          <p>Atualizados em ${updated}.</p>`,
       },
       envio: {
         title: "Política de Envio e Entrega",
         body: `
-          <p>Nosso objetivo é garantir que suas cartas Pokémon cheguem até você com segurança e praticidade.</p>
-          <h2>Formas de envio</h2>
-          <p>Realizamos nossos envios por meio das modalidades de transporte disponíveis através da <span class="sf-lock"><img class="sf-logo" src="assets/superfrete.png?v=2" alt="SuperFrete" />.</span> As opções de envio e os respectivos valores serão informados durante o atendimento pelo WhatsApp.</p>
-          <h2>Prazo de postagem</h2>
-          <p>Após a confirmação do pagamento, seu pedido será preparado para envio. O prazo estimado para postagem será informado durante a compra.</p>
-          <h2>Prazo de entrega</h2>
-          <p>O prazo de entrega depende do endereço de destino e da modalidade de envio escolhida. A estimativa será informada antes da confirmação do pedido e poderá sofrer alterações por fatores relacionados ao transporte.</p>
-          <h2>Código de rastreamento</h2>
-          <p>Quando disponível, você receberá o código de rastreamento para acompanhar o trajeto do seu pedido.</p>
-          <h2>Conferência do endereço</h2>
-          <p>Confira atentamente seu endereço de entrega antes de finalizar a compra. Caso identifique algum erro, entre em contato conosco o mais rápido possível.</p>
-          <h2>Atrasos ou problemas na entrega</h2>
-          <p>Se seu pedido atrasar, não chegar ou apresentar algum problema durante o transporte, entre em contato conosco pelo <a href="https://api.whatsapp.com/send?phone=5511969194152">WhatsApp</a>. Vamos verificar a situação e orientar você sobre os próximos passos.</p>
-          <h2>Proteção dos produtos</h2>
-          <p>Nossas cartas são embaladas com cuidado para reduzir o risco de danos durante o transporte. A embalagem utilizada poderá variar conforme o produto adquirido.</p>
-          <p>Nosso compromisso é oferecer uma experiência de compra transparente, segura e confiável.</p>`,
+          <p>Esta Política disciplina o envio e a entrega dos produtos comercializados pela A.M.D TCG. Prazo, modalidade e custo são informados de modo claro, nos termos do art. 6º, inciso III, e do art. 31 da Lei nº 8.078/1990, e do art. 2º, incisos IV e V, do Decreto nº 7.962/2013.</p>
+          <h2>Modalidades</h2>
+          <p>Os envios utilizam as modalidades de transporte disponíveis por meio da <span class="sf-lock"><img class="sf-logo" src="assets/superfrete.png?v=2" alt="SuperFrete" />.</span> As opções e os respectivos valores são informados no atendimento pelo WhatsApp, antes da confirmação do pedido.</p>
+          <h2>Postagem</h2>
+          <p>Confirmado o pagamento, o pedido é preparado para envio. O prazo estimado de postagem é informado durante a compra.</p>
+          <h2>Entrega</h2>
+          <p>O prazo de entrega varia conforme o destino e a modalidade escolhida. A estimativa é apresentada antes da confirmação e pode ser alterada por fato relacionado ao transporte.</p>
+          <h2>Rastreamento</h2>
+          <p>Quando a modalidade o fornecer, o código de rastreamento será encaminhado ao consumidor para acompanhamento do pedido.</p>
+          <h2>Endereço</h2>
+          <p>Cabe ao consumidor conferir o endereço de entrega antes da conclusão da compra. Divergência deve ser comunicada imediatamente pelo ${wa}.</p>
+          <h2>Atraso ou extravio</h2>
+          <p>Em caso de atraso, não recebimento ou avaria no transporte, o consumidor deve contatar o fornecedor pelo ${wa}. A ocorrência será verificada e orientada, sem prejuízo dos direitos previstos na Lei nº 8.078/1990, em especial os arts. 18 e 26.</p>
+          <h2>Acondicionamento</h2>
+          <p>Os produtos são embalados de modo a reduzir o risco de dano no transporte. A embalagem pode variar conforme o item adquirido.</p>`,
       },
       trocas: {
         title: "Política de Trocas e Devoluções",
         body: `
-          <p>Queremos que você fique satisfeito com sua compra. Por isso, disponibilizamos orientações claras para solicitações de troca e devolução.</p>
+          <p>Esta Política disciplina as trocas e as devoluções, em conformidade com a Lei nº 8.078/1990.</p>
           <h2>Direito de arrependimento</h2>
-          <p>Nas compras realizadas à distância, você tem o direito de se arrepender da compra no prazo legal de 7 dias, contado conforme o artigo 49 do Código de Defesa do Consumidor. Esse direito também se aplica às compras concluídas pelo WhatsApp.</p>
-          <h2>Como solicitar uma devolução</h2>
-          <p>Entre em contato conosco pelo <a href="https://api.whatsapp.com/send?phone=5511969194152">WhatsApp</a>, informe o número do pedido e comunique sua solicitação. Nossa equipe fornecerá as orientações necessárias para realizar a devolução.</p>
-          <h2>Condição das cartas</h2>
-          <p>As cartas Pokémon podem apresentar diferentes condições de conservação. Por isso, recomendamos conferir atentamente as fotos e a descrição do produto antes de comprar.</p>
-          <h2>Produto danificado ou diferente do anunciado</h2>
-          <p>Se você receber uma carta danificada, diferente da adquirida ou com características divergentes das informadas no anúncio, entre em contato conosco para que possamos resolver a situação conforme seus direitos legais.</p>
-          <h2>Envio da devolução</h2>
-          <p>Após o contato, você receberá as instruções para encaminhar o produto. Os custos de devolução serão tratados conforme o motivo da solicitação e a legislação aplicável.</p>
-          <h2>Reembolso</h2>
-          <p>Quando cabível, o reembolso será realizado conforme a legislação vigente e os procedimentos da forma de pagamento utilizada.</p>
-          <p>Todas as solicitações serão tratadas com atenção e respeito aos direitos do consumidor.</p>`,
+          <p>Nas contratações realizadas fora do estabelecimento comercial, inclusive pelo WhatsApp, o consumidor pode desistir do contrato no prazo de 7 (sete) dias, contado da assinatura ou do ato de recebimento do produto, nos termos do art. 49 da Lei nº 8.078/1990. Exercido o direito, os valores eventualmente pagos serão devolvidos de imediato, monetariamente atualizados, conforme o parágrafo único desse artigo.</p>
+          <h2>Procedimento</h2>
+          <p>A solicitação deve ser feita pelo ${wa}, com a identificação do pedido. O fornecedor informará o modo de devolução do produto.</p>
+          <h2>Estado de conservação</h2>
+          <p>As cartas podem ser ofertadas em diferentes estados de conservação. Descrição e imagens integram a oferta e vinculam o fornecedor, nos termos dos arts. 30 e 31 da Lei nº 8.078/1990. Recomenda-se a leitura da ficha antes da compra.</p>
+          <h2>Vício do produto</h2>
+          <p>Produto danificado, trocado ou em desacordo com a oferta sujeita o fornecedor ao art. 18 da Lei nº 8.078/1990. Não sanado o vício no prazo máximo de 30 (trinta) dias, o consumidor pode exigir, à sua escolha, a substituição do produto, a restituição da quantia paga ou o abatimento proporcional do preço, na forma do § 1º desse artigo. O prazo para reclamar de vício aparente ou de fácil constatação em produto durável é de 90 (noventa) dias, contado da entrega efetiva (art. 26, inciso II, e § 1º). Tratando-se de vício oculto, o prazo inicia-se no momento em que ficar evidenciado o defeito (art. 26, § 3º).</p>
+          <h2>Custos da devolução</h2>
+          <p>As despesas de devolução serão definidas conforme a causa do pedido e a legislação aplicável. A restituição de valores, quando devida, observa a <a href="#/reembolso">Política de Reembolso e Cancelamento</a>.</p>`,
       },
       reembolso: {
         title: "Política de Reembolso e Cancelamento",
         body: `
-          <p>Queremos que você tenha clareza sobre como funcionam os cancelamentos e os reembolsos em nossa loja.</p>
-          <h2>Cancelamento antes do envio</h2>
-          <p>Se desejar cancelar seu pedido antes da postagem, entre em contato conosco pelo <a href="https://api.whatsapp.com/send?phone=5511969194152">WhatsApp</a> o mais rápido possível. Verificaremos a situação do pedido e informaremos como proceder.</p>
-          <h2>Cancelamento após o envio</h2>
-          <p>Se o pedido já tiver sido enviado, entre em contato com nossa equipe para receber as orientações necessárias. Seus direitos previstos na legislação serão respeitados.</p>
-          <h2>Direito de arrependimento</h2>
-          <p>Nas compras realizadas à distância, você poderá exercer seu direito de arrependimento dentro do prazo legal de 7 dias, contado conforme a legislação aplicável.</p>
-          <h2>Produtos com problemas</h2>
-          <p>Se receber um produto danificado, incorreto ou diferente do anunciado, entre em contato conosco para que a situação seja analisada e resolvida conforme a legislação vigente.</p>
-          <h2>Como o reembolso será realizado</h2>
-          <p>Quando aplicável, o reembolso será processado pelo meio de pagamento original, observados os procedimentos necessários e as regras legais.</p>
-          <p>O prazo para o valor aparecer em sua conta ou fatura poderá variar de acordo com o banco, a operadora ou a instituição responsável pelo pagamento.</p>
-          <h2>Como entrar em contato</h2>
-          <p>Para solicitar cancelamento ou reembolso, fale conosco pelo <a href="https://api.whatsapp.com/send?phone=5511969194152">WhatsApp</a> informado em nosso site. Nossa equipe orientará você durante o processo.</p>`,
+          <p>Esta Política disciplina o cancelamento de pedidos e a restituição de valores pagos à A.M.D TCG, sem prejuízo da Lei nº 8.078/1990.</p>
+          <h2>Antes da postagem</h2>
+          <p>O cancelamento anterior ao envio deve ser solicitado pelo ${wa}. O fornecedor verificará o estágio do pedido e informará o procedimento cabível.</p>
+          <h2>Depois da postagem</h2>
+          <p>Se o produto já houver sido despachado, o consumidor deve contatar o fornecedor pelo mesmo canal. Permanecem assegurados os direitos legais, inclusive o de arrependimento, quando presente a hipótese do art. 49 da Lei nº 8.078/1990.</p>
+          <h2>Arrependimento</h2>
+          <p>Nas compras concluídas fora do estabelecimento, o prazo de desistência é de 7 (sete) dias, contado da assinatura ou do recebimento do produto (art. 49 da Lei nº 8.078/1990). Exercido o direito, os valores pagos serão devolvidos de imediato, monetariamente atualizados (parágrafo único do mesmo artigo).</p>
+          <h2>Inexecução da oferta e vício</h2>
+          <p>Se o fornecedor recusar o cumprimento de oferta confirmada, o consumidor poderá escolher entre o cumprimento forçado, produto equivalente ou a rescisão com restituição da quantia antecipada, monetariamente atualizada, e perdas e danos, nos termos do art. 35 da Lei nº 8.078/1990. Produto com vício observa o art. 18 e o seu § 1º: não sanado o defeito em até 30 (trinta) dias, cabem a substituição, a restituição integral ou o abatimento proporcional do preço.</p>
+          <h2>Forma da restituição</h2>
+          <p>A restituição, quando devida, será processada pelo meio de pagamento utilizado na compra. O lançamento em fatura ou conta pode observar o prazo da instituição de pagamento, o que não afasta o dever legal de devolução imediata e atualizada.</p>
+          <h2>Contato</h2>
+          <p>Pedidos de cancelamento ou de restituição devem ser dirigidos ao ${wa} indicado neste site.</p>`,
       },
     };
     const page = pages[name];
