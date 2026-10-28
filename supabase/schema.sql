@@ -77,36 +77,6 @@ create policy "ler visitas"
   to authenticated
   using (true);
 
-create table if not exists public.customers (
-  id bigint generated always as identity primary key,
-  created_at timestamptz not null default now(),
-  name text not null default '',
-  email text not null unique check (char_length(email) <= 120 and email ~* '^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'),
-  phone text not null default '' check (char_length(phone) <= 20),
-  constraint customers_name_len check (char_length(name) <= 80)
-);
-
-alter table public.customers enable row level security;
-
-drop policy if exists "registrar cliente" on public.customers;
-drop policy if exists "ler clientes" on public.customers;
-
-create policy "registrar cliente"
-  on public.customers for insert
-  to anon, authenticated
-  with check (true);
-
-create policy "ler clientes"
-  on public.customers for select
-  to authenticated
-  using (true);
-
-alter table public.customers drop constraint if exists customers_name_len;
-alter table public.customers add constraint customers_name_len check (char_length(name) <= 80);
-alter table public.customers drop constraint if exists customers_phone_len;
-alter table public.customers add constraint customers_phone_len check (char_length(phone) <= 20);
-alter table public.customers drop constraint if exists customers_email_len;
-alter table public.customers add constraint customers_email_len check (char_length(email) <= 120);
 alter table public.visits drop constraint if exists visits_path_len;
 alter table public.visits add constraint visits_path_len check (char_length(path) <= 120 and char_length(visitor) <= 64 and char_length(city) <= 80);
 

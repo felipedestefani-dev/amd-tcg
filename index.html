@@ -29,7 +29,7 @@
   <meta name="twitter:title" content="A.M.D TCG — Pokémon" />
   <meta name="twitter:description" content="Cartas avulsas e lacrados de Pokémon. A.M.D TCG." />
   <meta name="twitter:image" content="https://amdtcg.vercel.app/assets/og.jpg?v=1" />
-  <link rel="stylesheet" href="styles.css?v=80" />
+  <link rel="stylesheet" href="styles.css?v=81" />
 </head>
 <body>
   <div class="boot" id="boot" role="status" aria-live="polite" aria-label="Carregando">
@@ -61,9 +61,6 @@
         <svg class="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
         <span>Menu</span>
       </button>
-      <a class="ghost" id="criar" href="#/cadastro">Criar conta</a>
-      <button class="ghost" id="sair" type="button" hidden>Sair</button>
-      <a class="solid" id="entrar" href="#/entrar">Entrar</a>
     </div>
   </header>
 
@@ -79,7 +76,6 @@
         <a href="#/envio"><img src="assets/icons/ship.png" alt="" />Envio</a>
         <a href="#/trocas"><img src="assets/icons/refund.png" alt="" />Trocas</a>
         <a href="#/reembolso"><img src="assets/icons/pay.png" alt="" />Reembolso</a>
-        <a href="#/cadastro"><img src="assets/icons/buy.png" alt="" />Cadastro</a>
       </nav>
     </aside>
 
@@ -91,7 +87,6 @@
         <nav class="legal-nav" aria-label="Documentos">
           <a href="#/privacidade">Privacidade</a>
           <a href="#/cookies">Cookies</a>
-          <a href="#/termos">Termos de uso</a>
           <a href="#/envio">Envio</a>
           <a href="#/trocas">Trocas</a>
           <a href="#/reembolso">Reembolso</a>
@@ -101,7 +96,7 @@
   </div>
 
   <div class="cookie" id="cookie" hidden>
-    <p>A conta guarda só o necessário neste aparelho. Se você aceitar, a loja também registra a visita: página, IP e cidade.</p>
+    <p>Se você aceitar, a loja registra a visita: página, IP e cidade. Sem isso, só fica salva a sua escolha neste aparelho.</p>
     <a href="#/cookies">Ver cookies</a>
     <div class="cookie-actions">
       <button class="ghost" id="cookie-min" type="button">Só o necessário</button>
@@ -110,6 +105,6 @@
   </div>
   <script src="catalog.js?v=13"></script>
   <script src="supabase.js?v=2"></script>
-  <script src="app.js?v=77"></script>
+  <script src="app.js?v=78"></script>
 </body>
 </html>

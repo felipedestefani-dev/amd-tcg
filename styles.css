@@ -203,8 +203,6 @@ button, input, select { font: inherit; color: inherit; }
   font-size: 0.95rem;
 }
 .menu a img { width: 18px; height: 18px; max-width: 18px; object-fit: contain; flex: none; }
-#criar[hidden],
-#sair[hidden] { display: none; }
 .menu a[aria-current="page"] { background: #fff; color: var(--ink); }
 .menu a:hover { background: #fff; }
 
@@ -773,24 +771,6 @@ button, input, select { font: inherit; color: inherit; }
   background: #fff;
 }
 .form input:focus { outline: 2px solid #111; outline-offset: 1px; }
-.form .agree {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  color: var(--text);
-  font-size: 0.86rem;
-  font-weight: 550;
-  line-height: 1.4;
-}
-.form .agree input {
-  width: 18px;
-  height: 18px;
-  margin: 0.12rem 0 0;
-  padding: 0;
-  flex: none;
-  accent-color: var(--red);
-}
-.form .agree a { color: var(--ink); font-weight: 700; }
 .msg { min-height: 1.2rem; font-size: 0.9rem; }
 
 .foot {
@@ -869,13 +849,6 @@ body.has-cookie { padding-bottom: 0; }
   .boot-track span { width: 100%; }
 }
 
-.auth {
-  display: grid;
-  place-items: center;
-  min-height: calc(100vh - 180px);
-  padding: 0.4rem 0 1.5rem;
-}
-.auth-card,
 .login-card {
   width: min(440px, 100%);
   margin: 0;
@@ -886,44 +859,37 @@ body.has-cookie { padding-bottom: 0; }
   box-shadow: 0 18px 44px rgba(17, 17, 17, 0.06);
   text-align: center;
 }
-.auth-card .brand,
 .login-card .brand {
   display: flex;
   justify-content: center;
   margin: 0 0 0.15rem;
 }
-.auth-card .brand img,
 .login-card .brand img {
   width: 156px;
   height: auto;
 }
-.auth-card .page-title,
 .login-card h1 {
   margin: 0.2rem 0 0.3rem;
   text-align: center;
   font-size: 1.55rem;
   letter-spacing: -0.03em;
 }
-.auth-card .lede,
 .login-card > p {
   margin: 0 auto 1rem;
   max-width: 32rem;
   text-align: center;
 }
-.auth-card .form,
 .login-card .fields {
   max-width: none;
   margin-top: 0.15rem;
   text-align: left;
 }
-.auth-card .solid,
 .login-card .solid {
   width: 100%;
   min-height: 46px;
   margin-top: 0.2rem;
   border-radius: 14px;
 }
-.auth-switch,
 .login-back {
   display: block;
   margin: 0.15rem 0 0;
@@ -932,7 +898,6 @@ body.has-cookie { padding-bottom: 0; }
   font-size: 0.92rem;
   text-decoration: none;
 }
-.auth-switch a,
 .login-back { color: var(--red); font-weight: 700; }
 
 .admin-body { background: #f3f4f6; }
@@ -1065,10 +1030,6 @@ body.has-cookie { padding-bottom: 0; }
 .qty-step b { min-width: 1.2rem; text-align: center; }
 .row-actions { display: flex; gap: 0.35rem; flex: none; }
 .row-edit, .row-delete { min-height: 34px; padding: 0 0.7rem; white-space: nowrap; }
-.profile { margin: 0.2rem 0 0.4rem; text-align: left; }
-.profile div { padding: 0.75rem 0; border-top: 1px solid var(--line); }
-.profile dt { color: var(--muted); font-size: 0.78rem; font-weight: 650; }
-.profile dd { margin: 0.15rem 0 0; font-weight: 700; overflow-wrap: anywhere; }
 .photo-box { display: flex; gap: 0.9rem; align-items: center; }
 .photo-actions { display: grid; gap: 0.4rem; justify-items: start; }
 .photo-actions p { margin: 0; color: var(--muted); font-size: 0.82rem; font-weight: 500; }
@@ -1137,17 +1098,6 @@ body.has-cookie { padding-bottom: 0; }
 .bar small, .bar b { font-size: 0.72rem; color: var(--muted); }
 .bar b { color: var(--text); }
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
-.client {
-  display: grid;
-  grid-template-columns: 1.1fr 1.4fr 0.9fr auto;
-  gap: 0.25rem 0.8rem;
-  align-items: center;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--line);
-}
-.client strong { font-size: 0.98rem; }
-.client span, .client small { color: var(--muted); }
-.client small { font-size: 0.82rem; }
 .rank { display: grid; grid-template-columns: 1fr auto auto; gap: 0.35rem 0.7rem; align-items: center; margin: 0.55rem 0; }
 .rank i { grid-column: 1 / -1; height: 4px; background: var(--red); border-radius: 99px; display: block; }
 .sql { white-space: pre-wrap; font-size: 0.78rem; background: #f3f4f6; padding: 0.7rem; border-radius: 10px; }
@@ -1301,16 +1251,6 @@ body.has-cookie { padding-bottom: 0; }
   .print-grid img { height: 78px; }
   .print-grid strong, .print-grid span { font-size: 0.64rem; }
   .split { grid-template-columns: 1fr; }
-  .client {
-    grid-template-columns: 1fr;
-    gap: 0.15rem;
-    margin: 0.45rem 0;
-    padding: 0.75rem 0.8rem;
-    background: #f6f6f7;
-    border: 0;
-    border-radius: 14px;
-  }
-  .client span, .client small { overflow-wrap: anywhere; }
   .rank { grid-template-columns: minmax(0, 1fr) auto auto; }
   .rank span { overflow-wrap: anywhere; }
   .bars { gap: 0.35rem; }

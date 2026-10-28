@@ -82,20 +82,6 @@
     return String(value ?? "").replace(/[\u0000-\u001F\u007F]/g, "").trim().slice(0, max);
   }
 
-  function validEmail(value) {
-    const email = plainField(value, 120).toLowerCase();
-    return /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(email) ? email : "";
-  }
-
-  function validPhone(value) {
-    const phone = plainField(value, 20);
-    return /^[0-9+()\-\s]{8,20}$/.test(phone) ? phone : "";
-  }
-
-  function loggedIn() {
-    return Boolean(sessionStorage.getItem("amd.session"));
-  }
-
   function payPrice(value) {
     return Number(value) || 0;
   }
@@ -236,11 +222,6 @@
       if (link.getAttribute("href") === key) link.setAttribute("aria-current", "page");
       else link.removeAttribute("aria-current");
     });
-  }
-
-  function account() {
-    try { return JSON.parse(localStorage.getItem("amd.account") || "null"); }
-    catch { return null; }
   }
 
   function bannerSrc(value) {
@@ -546,7 +527,6 @@
   }
 
   function render() {
-    paintAccount();
     trackVisit();
     queueMicrotask(() => {
       spinHero();
@@ -607,66 +587,12 @@
       return;
     }
 
-    if (name === "cadastro") {
-      if (loggedIn()) { location.hash = "#/"; return; }
-      document.title = "Cadastro · A.M.D TCG";
-      const user = account();
-      main.innerHTML = `
-        <div class="auth">
-          <section class="auth-card">
-            <a class="brand" href="#/" aria-label="A.M.D TCG, início"><img src="assets/logo-mark.png?v=10" alt="" width="120" height="80" /></a>
-            <h1 class="page-title">Criar conta</h1>
-            <p class="lede">Preencha seus dados para criar a conta.</p>
-            <form class="form" id="signup">
-              <label>Nome<input name="name" required maxlength="80" value="${esc(user?.name || "")}" autocomplete="name" /></label>
-              <label>E-mail<input name="email" type="email" required maxlength="120" value="${esc(user?.email || "")}" autocomplete="email" /></label>
-              <label>Telefone<input name="phone" required maxlength="20" inputmode="tel" value="${esc(user?.phone || "")}" autocomplete="tel" /></label>
-              <label>Senha<input name="password" type="password" minlength="6" maxlength="72" required autocomplete="new-password" /></label>
-              <label class="agree">
-                <input name="terms" type="checkbox" required />
-                <span>Concordo com os <a href="#/termos">Termos de uso</a>, a <a href="#/privacidade">Política de privacidade</a>, a <a href="#/cookies">Política de cookies</a>, a <a href="#/envio">Política de envio e entrega</a>, a <a href="#/trocas">Política de trocas e devoluções</a> e a <a href="#/reembolso">Política de reembolso e cancelamento</a>.</span>
-              </label>
-              <button class="solid" type="submit">Criar conta</button>
-            </form>
-            <p class="msg" id="signup-msg"></p>
-            <p class="auth-switch">Já tem conta? <a href="#/entrar">Entrar</a></p>
-          </section>
-        </div>`;
-      document.getElementById("signup").addEventListener("submit", onSignup);
+    if (name === "cadastro" || name === "entrar" || name === "conta" || name === "termos") {
+      location.replace("#/");
       return;
     }
 
-    if (name === "conta") {
-      if (!loggedIn()) { location.hash = "#/entrar"; return; }
-      document.title = "Conta · A.M.D TCG";
-      main.innerHTML = profileCard(account() || {});
-      fillProfile();
-      return;
-    }
-
-    if (name === "entrar") {
-      document.title = "Entrar · A.M.D TCG";
-      const user = account();
-      main.innerHTML = `
-        <div class="auth">
-          <section class="auth-card">
-            <a class="brand" href="#/" aria-label="A.M.D TCG, início"><img src="assets/logo-mark.png?v=10" alt="" width="120" height="80" /></a>
-            <h1 class="page-title">Entrar</h1>
-            <p class="lede">${personName(user?.name, user?.email) || "Bem-vindo de volta."}</p>
-            <form class="form" id="signin">
-              <label>E-mail<input name="email" type="email" required maxlength="120" value="${esc(user?.email || "")}" autocomplete="email" /></label>
-              <label>Senha<input name="password" type="password" required maxlength="72" autocomplete="current-password" /></label>
-              <button class="solid" type="submit">Entrar</button>
-            </form>
-            <p class="msg" id="signin-msg"></p>
-            <p class="auth-switch">Ainda não tem conta? <a href="#/cadastro">Criar conta</a></p>
-          </section>
-        </div>`;
-      document.getElementById("signin").addEventListener("submit", onSignin);
-      return;
-    }
-
-    if (name === "privacidade" || name === "cookies" || name === "termos" || name === "envio" || name === "trocas" || name === "reembolso" || name === "pagamento") {
+    if (name === "privacidade" || name === "cookies" || name === "envio" || name === "trocas" || name === "reembolso" || name === "pagamento") {
       main.innerHTML = legalPage(name === "pagamento" ? "trocas" : name);
       return;
     }
@@ -812,21 +738,20 @@
           <p>O controlador, nos termos do art. 5º, inciso VI, da Lei nº 13.709/2018, é ${owner}, responsável pela A.M.D TCG. Requerimentos sobre dados pessoais devem ser encaminhados pelo ${wa}, no número 11 96919-4152.</p>
           <h2>Dados tratados</h2>
           <ul>
-            <li>Cadastro: nome, endereço de e-mail, telefone e senha. A senha permanece protegida no serviço de autenticação e não é acessada em texto aberto pela loja.</li>
             <li>Pedido: ao acionar Comprar, abre-se conversa no WhatsApp com o produto, a coleção, o idioma, a condição, o acabamento e o preço. Essa conversa observa também as regras daquela plataforma.</li>
             <li>Visita, somente com consentimento: página acessada, endereço IP e cidade aproximada, para mensurar o acesso ao catálogo.</li>
-            <li>Sessão: registro mantido neste navegador até o encerramento da aba, para reconhecer a conta autenticada.</li>
+            <li>Preferência do aviso neste aparelho: autorizar a contagem de visitas ou manter apenas o necessário.</li>
           </ul>
           <h2>Finalidades e bases legais</h2>
-          <p>O tratamento observa o art. 7º da Lei nº 13.709/2018. Cadastro, atendimento e formação do pedido apoiam-se na execução de contrato ou de procedimentos preliminares relacionados a contrato de que seja parte o titular (inciso V). O registro de visita com endereço IP e cidade apoia-se no consentimento (inciso I), que pode ser revogado a qualquer momento, de forma gratuita e facilitada, nos termos do art. 8º, § 5º. As informações prestadas ao titular observam o art. 9º da mesma lei.</p>
+          <p>O tratamento observa o art. 7º da Lei nº 13.709/2018. Atendimento e formação do pedido apoiam-se na execução de contrato ou de procedimentos preliminares relacionados a contrato de que seja parte o titular (inciso V). O registro de visita com endereço IP e cidade apoia-se no consentimento (inciso I), que pode ser revogado a qualquer momento, de forma gratuita e facilitada, nos termos do art. 8º, § 5º. As informações prestadas ao titular observam o art. 9º da mesma lei.</p>
           <h2>Compartilhamento</h2>
-          <p>A A.M.D TCG não comercializa dados pessoais. O cadastro e as visitas consentidas são armazenados na Supabase. O site é hospedado na Vercel. A cidade aproximada decorre de consulta do endereço IP ao serviço ipwho.is. O pedido é transmitido ao WhatsApp quando o consumidor aciona Comprar. Esses operadores podem manter dados fora do Brasil, hipótese em que a transferência observa o art. 33 da Lei nº 13.709/2018 e restringe-se às finalidades desta Política.</p>
+          <p>A A.M.D TCG não comercializa dados pessoais. As visitas consentidas são armazenadas na Supabase. O site é hospedado na Vercel. A cidade aproximada decorre de consulta do endereço IP ao serviço ipwho.is. O pedido é transmitido ao WhatsApp quando o consumidor aciona Comprar. Esses operadores podem manter dados fora do Brasil, hipótese em que a transferência observa o art. 33 da Lei nº 13.709/2018 e restringe-se às finalidades desta Política.</p>
           <h2>Conservação</h2>
-          <p>O cadastro é mantido enquanto a conta existir. Os registros de visita permanecem para a contagem de acessos e podem ser eliminados a pedido do titular. A sessão local encerra-se com o fechamento do navegador.</p>
+          <p>Os registros de visita permanecem para a contagem de acessos e podem ser eliminados a pedido do titular. A preferência do aviso permanece neste aparelho até ser apagada.</p>
           <h2>Direitos do titular</h2>
           <p>Nos termos do art. 18 da Lei nº 13.709/2018, o titular pode requerer confirmação da existência de tratamento, acesso aos dados, correção, portabilidade, eliminação, informação sobre as entidades com as quais os dados foram compartilhados e revogação do consentimento. A declaração clara e completa será fornecida no prazo de até 15 (quinze) dias, contado do requerimento, conforme o art. 19, inciso II, da mesma lei. É facultado ao titular apresentar reclamação à Autoridade Nacional de Proteção de Dados, em gov.br/anpd.</p>
           <h2>Crianças e adolescentes</h2>
-          <p>O cadastro destina-se a pessoas maiores de 18 (dezoito) anos. O tratamento de dados de crianças e de adolescentes observa o art. 14 da Lei nº 13.709/2018. A loja não solicita, de modo intencional, dados de crianças.</p>
+          <p>O tratamento de dados de crianças e de adolescentes observa o art. 14 da Lei nº 13.709/2018. A loja não solicita, de modo intencional, dados de crianças.</p>
           <p>Atualizada em ${updated}.</p>`,
       },
       cookies: {
@@ -834,39 +759,15 @@
         body: `
           <p>Esta Política descreve os dados armazenados no aparelho do usuário. O site não emprega cookies de publicidade. O tratamento observa a Lei nº 13.709/2018 e a <a href="#/privacidade">Política de Privacidade</a>.</p>
           <h2>Dados necessários</h2>
-          <p>O armazenamento indispensável à conta independe de consentimento específico, porque se destina à execução do serviço solicitado pelo titular, nos termos do art. 7º, inciso V, da Lei nº 13.709/2018.</p>
+          <p>O site guarda neste aparelho a opção registrada neste aviso: autorizar a contagem de visitas ou manter apenas o necessário.</p>
           <ul>
-            <li>Sessão da conta, para reconhecer o acesso nesta aba.</li>
-            <li>Nome, e-mail e telefone do cadastro, neste aparelho.</li>
-            <li>A opção registrada neste aviso: autorizar a contagem de visitas ou manter apenas o necessário.</li>
+            <li>A escolha deste aviso, para não perguntar de novo a cada visita.</li>
           </ul>
           <h2>Dados dependentes de consentimento</h2>
           <p>O registro da página visitada, do endereço IP e da cidade aproximada somente ocorre com consentimento, nos termos do art. 7º, inciso I, e do art. 8º da Lei nº 13.709/2018. Sem essa autorização, a visita não é registrada.</p>
           <h2>Revogação</h2>
           <p>O consentimento pode ser revogado a qualquer momento, nos termos do art. 8º, § 5º, da Lei nº 13.709/2018. A exclusão dos dados locais, nas configurações do navegador, faz com que o aviso seja apresentado novamente na visita seguinte. A eliminação do que já houver sido registrado pela loja deve ser solicitada pelo ${wa}.</p>
           <p>Atualizada em ${updated}.</p>`,
-      },
-      termos: {
-        title: "Termos de Uso",
-        body: `
-          <p>Estes Termos regulam o uso do site da A.M.D TCG. O fornecedor é ${owner}, responsável pela loja, identificado para os fins do art. 2º do Decreto nº 7.962, de 15 de março de 2013.</p>
-          <p>O site disponibiliza o catálogo. A solicitação de compra é encaminhada pelo WhatsApp, e o contrato se aperfeiçoa nessa conversa, não pelo simples acionamento do botão no site. As informações ao consumidor observam o art. 6º, inciso III, e o art. 31 da Lei nº 8.078, de 11 de setembro de 1990 (Código de Defesa do Consumidor), e o art. 4º do Decreto nº 7.962/2013.</p>
-          <h2>Oferta</h2>
-          <p>Preço, quantidade, idioma, condição e acabamento são os constantes da ficha no momento da consulta. A oferta suficientemente precisa vincula o fornecedor, nos termos do art. 30 da Lei nº 8.078/1990. O item pode esgotar-se antes da confirmação. Valor e reserva são confirmados no WhatsApp. Recusada a oferta já confirmada, aplicam-se as alternativas do art. 35 da mesma lei. Envio, troca, devolução, reembolso e cancelamento observam a <a href="#/envio">Política de Envio e Entrega</a>, a <a href="#/trocas">Política de Trocas e Devoluções</a>, a <a href="#/reembolso">Política de Reembolso e Cancelamento</a> e a Lei nº 8.078/1990.</p>
-          <h2>Conta</h2>
-          <p>Os dados cadastrais devem corresponder ao próprio titular. A guarda da senha incumbe ao usuário. O fornecedor pode recusar cadastro fundado em informação falsa ou em uso que prejudique o site ou terceiros.</p>
-          <h2>Condutas vedadas</h2>
-          <ul>
-            <li>Empregar o site para fraude, comunicação não solicitada ou obtenção de dados de terceiros.</li>
-            <li>Tentar acessar, extrair em massa ou comprometer o catálogo sem autorização.</li>
-            <li>Apresentar o conteúdo da loja como de autoria própria.</li>
-          </ul>
-          <h2>Propriedade intelectual</h2>
-          <p>As ilustrações, os símbolos e os logotipos de coleção exibidos no catálogo para identificar as cartas são obtidos da Pokémon TCG API (pokemontcg.io), serviço de terceiros. Esses elementos, bem como os textos das cartas, são obras e sinais distintivos de seus respectivos titulares. Pokémon, Nintendo, Creatures, GAME FREAK e The Pokémon Company são marcas de seus proprietários.</p>
-          <p>A A.M.D TCG não é autora dessas obras, nos termos da Lei nº 9.610, de 19 de fevereiro de 1998, nem titular dessas marcas, nos termos da Lei nº 9.279, de 14 de maio de 1996. O uso no site limita-se à identificação do produto físico ofertado. A loja não é patrocinada, endossada nem mantém vínculo oficial com a Nintendo, a Creatures, a GAME FREAK, a The Pokémon Company ou a The Pokémon Company International.</p>
-          <h2>Disposições finais</h2>
-          <p>O catálogo exibe a disponibilidade nele informada. Atraso de transportadora, falta de estoque ou indisponibilidade do WhatsApp não importam contratação automática. Aplica-se a legislação da República Federativa do Brasil. Comunicações sobre estes Termos devem ser dirigidas ao ${wa}.</p>
-          <p>Atualizados em ${updated}.</p>`,
       },
       envio: {
         title: "Política de Envio e Entrega",
@@ -939,231 +840,6 @@
     };
     document.getElementById("cookie-all").onclick = () => pick("all");
     document.getElementById("cookie-min").onclick = () => pick("essential");
-  }
-
-  async function onSignup(event) {
-    event.preventDefault();
-    const form = new FormData(event.target);
-    const profile = {
-      name: personName(plainField(form.get("name"), 80)),
-      email: validEmail(form.get("email")),
-      phone: validPhone(form.get("phone")),
-    };
-    if (/[;<>]|--|\/\*/.test(profile.name)) profile.name = "";
-    const password = plainField(form.get("password"), 72);
-    const msg = document.getElementById("signup-msg");
-    if (!profile.name || !profile.email || !profile.phone) {
-      msg.textContent = "Use nome, e-mail e telefone válidos.";
-      return;
-    }
-    if (!form.get("terms")) {
-      msg.textContent = "Aceite os Termos de uso e as políticas para criar a conta.";
-      return;
-    }
-    try {
-      const sb = await window.AMD_SB.client();
-      if (!sb) {
-        msg.textContent = "Não foi possível criar a conta agora. Tente de novo.";
-        return;
-      }
-      const { error } = await sb.auth.signUp({
-        email: profile.email,
-        password,
-        options: { data: { name: profile.name, phone: profile.phone } },
-      });
-      if (error) {
-        msg.textContent = /already registered|already exists/i.test(error.message || "")
-          ? "Esse e-mail já tem conta. Entre com ele."
-          : "Não foi possível criar a conta. Confira os dados e tente de novo.";
-        return;
-      }
-      await saveCustomer(sb, profile);
-    } catch (error) {
-      console.warn(error);
-      msg.textContent = "Não foi possível criar a conta agora. Tente de novo.";
-      return;
-    }
-    msg.textContent = "Conta criada.";
-    localStorage.setItem("amd.account", JSON.stringify(profile));
-    sessionStorage.setItem("amd.session", profile.email);
-    paintAccount();
-    location.hash = "#/";
-  }
-
-  async function saveCustomer(sb, profile) {
-    if (!sb || !validEmail(profile?.email)) return;
-    const { error } = await sb.from("customers").insert({
-      name: plainField(profile.name, 80),
-      email: validEmail(profile.email),
-      phone: validPhone(profile.phone),
-    });
-    if (error && !/duplicate|unique/i.test(error.message || "")) console.warn(error.message);
-  }
-
-  function titled(value) {
-    const text = String(value || "").trim();
-    if (!text || text.includes("@")) return "";
-    return text.split(/\s+/).filter(Boolean).map((part) => part.charAt(0).toLocaleUpperCase("pt-BR") + part.slice(1)).join(" ");
-  }
-
-  function profileCard(user) {
-    const phone = String(user.phone || "").trim();
-    return `
-      <div class="auth">
-        <section class="auth-card profile-card">
-          <a class="brand" href="#/" aria-label="A.M.D TCG, início"><img src="assets/logo-mark.png?v=10" alt="" width="120" height="80" /></a>
-          <h1 class="page-title">Sua conta</h1>
-          <dl class="profile">
-            <div><dt>Nome</dt><dd id="profile-name">${esc(titled(user.name) || "Não informado")}</dd></div>
-            <div><dt>E-mail</dt><dd id="profile-email">${esc(user.email || "Não informado")}</dd></div>
-            <div><dt>Telefone</dt><dd id="profile-phone">${esc(phone || "Não informado")}</dd></div>
-          </dl>
-        </section>
-      </div>`;
-  }
-
-  async function fillProfile() {
-    try {
-      const sb = await window.AMD_SB.client();
-      if (!sb || route().name !== "conta") return;
-      const { data } = await sb.auth.getUser();
-      const user = data.user;
-      if (!user) return;
-      const meta = user.user_metadata || {};
-      const email = user.email || "";
-      const { data: row } = await sb.from("customers").select("name,phone").eq("email", email).maybeSingle();
-      const next = rememberAccount({
-        name: meta.name || row?.name || "",
-        email,
-        phone: meta.phone || row?.phone || "",
-      });
-      if (!next || route().name !== "conta") return;
-      const name = document.getElementById("profile-name");
-      const mail = document.getElementById("profile-email");
-      const phone = document.getElementById("profile-phone");
-      if (name) name.textContent = titled(next.name) || titled(row?.name) || "Não informado";
-      if (mail) mail.textContent = next.email || "Não informado";
-      if (phone) phone.textContent = next.phone || "Não informado";
-      paintAccount();
-    } catch { /* a conta local continua na tela */ }
-  }
-
-  function personName(value, email) {
-    const text = String(value || "").trim();
-    if (!text || text.includes("@")) return "";
-    const local = String(email || "").split("@")[0].toLowerCase();
-    if (local && text.toLowerCase() === local) return "";
-    return text.split(/\s+/).filter(Boolean).map((part) => part.charAt(0).toLocaleUpperCase("pt-BR") + part.slice(1)).join(" ");
-  }
-
-  function rememberAccount(profile) {
-    const current = account() || {};
-    const email = (profile.email || current.email || "").trim();
-    const next = {
-      name: personName(profile.name, email) || personName(current.name, email),
-      email,
-      phone: (profile.phone || current.phone || "").trim(),
-    };
-    if (!next.email) return null;
-    localStorage.setItem("amd.account", JSON.stringify(next));
-    sessionStorage.setItem("amd.session", next.email);
-    return next;
-  }
-
-  async function nameFor(sb, email, fallback) {
-    const given = personName(fallback, email);
-    if (given) return given;
-    if (!sb || !email) return "";
-    const { data } = await sb.from("customers").select("name").eq("email", email).maybeSingle();
-    return personName(data?.name, email);
-  }
-
-  async function onSignin(event) {
-    event.preventDefault();
-    const form = new FormData(event.target);
-    const msg = document.getElementById("signin-msg");
-    const email = validEmail(form.get("email"));
-    const password = plainField(form.get("password"), 72);
-    if (!email || !password) {
-      msg.textContent = "E-mail ou senha incorretos.";
-      return;
-    }
-    const saved = account();
-    try {
-      const sb = await window.AMD_SB.client();
-      if (!sb) {
-        msg.textContent = "Não foi possível entrar agora. Tente de novo.";
-        return;
-      }
-      const { data, error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) {
-        msg.textContent = "E-mail ou senha incorretos.";
-        return;
-      }
-      const meta = data.user?.user_metadata || {};
-      const profile = rememberAccount({
-        name: await nameFor(sb, data.user?.email || email, meta.name),
-        email: data.user?.email || email,
-        phone: meta.phone || saved?.phone || "",
-      });
-      await saveCustomer(sb, profile);
-    } catch (error) {
-      msg.textContent = "Não foi possível entrar.";
-      return;
-    }
-    sessionStorage.setItem("amd.session", email);
-    paintAccount();
-    location.hash = "#/";
-  }
-
-  function paintAccount() {
-    const user = account();
-    const link = document.getElementById("entrar");
-    const signup = document.getElementById("criar");
-    const leave = document.getElementById("sair");
-    const menuSignup = document.querySelector('#nav a[href="#/cadastro"]');
-    const on = loggedIn();
-    if (signup) signup.hidden = on;
-    if (leave) leave.hidden = !on;
-    if (menuSignup) menuSignup.hidden = on;
-    if (on) {
-      link.textContent = personName(user?.name, user?.email) || "Conta";
-      link.href = "#/conta";
-    } else {
-      link.textContent = "Entrar";
-      link.href = "#/entrar";
-    }
-  }
-
-  async function logout() {
-    sessionStorage.removeItem("amd.session");
-    try {
-      const sb = await window.AMD_SB.client();
-      if (sb) await sb.auth.signOut();
-    } catch { /* a tela volta mesmo se a saída remota falhar */ }
-    paintAccount();
-    if ((location.hash || "#/") !== "#/") location.hash = "#/";
-    else render();
-  }
-
-  async function syncAccount() {
-    try {
-      const sb = await window.AMD_SB.client();
-      if (!sb) return;
-      const { data, error } = await sb.auth.getSession();
-      if (error || !data.session) {
-        if (!error) sessionStorage.removeItem("amd.session");
-        return;
-      }
-      const user = data.session.user;
-      const meta = user.user_metadata || {};
-      const profile = rememberAccount({
-        name: await nameFor(sb, user.email || "", meta.name || ""),
-        email: user.email || "",
-        phone: meta.phone || "",
-      });
-      await saveCustomer(sb, profile);
-    } catch { /* sem rede, mantém a sessão que já está no aparelho */ }
   }
 
   function fillSets() {
@@ -1341,9 +1017,7 @@
   });
 
   bindCookies();
-  document.getElementById("sair").onclick = logout;
-  loadRemote().finally(async () => {
-    await syncAccount();
+  loadRemote().finally(() => {
     fillSets();
     render();
   });

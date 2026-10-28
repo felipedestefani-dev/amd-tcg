@@ -21,9 +21,6 @@
   let visitTo = "";
   let visits = [];
   let visitsError = "";
-  let customers = [];
-  let customersError = "";
-  let clientQuery = "";
   let sealedItems = [];
   let sealedType = "Todos";
   let sealedTimer = 0;
@@ -355,7 +352,6 @@
             ${item("sets", "Coleções", "Coleções", "/assets/icons/sets.png")}
             ${item("banners", "Banners", "Banners", "/assets/icons/banners.svg")}
             ${item("visits", "Visitas", "Visitas", "/assets/icons/search.png")}
-            ${item("clients", "Clientes", "Clientes", "/assets/icons/visits-people.svg")}
           </nav>
           <div class="desk-tools">
             <button class="ghost" type="button" id="sair">Sair</button>
@@ -443,8 +439,6 @@
       "#/pokecast": "Pokecast",
       "#/contato": "Contato",
       "#/sobre": "Sobre",
-      "#/cadastro": "Cadastro",
-      "#/entrar": "Entrar",
     };
     return names[path] || path;
   }
@@ -549,43 +543,6 @@ create policy "ler visitas" on public.visits for select to authenticated using (
           }).join("") || `<p class="empty">Nenhum acesso.</p>`}
         </section>
       </div>`);
-  }
-
-  function clientRows() {
-    const query = clientQuery.trim().toLowerCase();
-    const list = customers.filter((customer) => {
-      if (!query) return true;
-      return `${customer.name} ${customer.email} ${customer.phone}`.toLowerCase().includes(query);
-    });
-    if (!customers.length) return `<p class="empty">Nenhuma conta criada ainda.</p>`;
-    if (!list.length) return `<p class="empty">Nenhum cliente com esse nome.</p>`;
-    return list.map((customer) => {
-      const when = new Date(customer.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
-      return `<article class="client"><strong>${esc(customer.name || "Sem nome")}</strong><span>${esc(customer.email)}</span><span>${esc(customer.phone || "Sem telefone")}</span><small>${esc(when)}</small></article>`;
-    }).join("");
-  }
-
-  function clientsView() {
-    if (customersError) {
-      const sql = /customers|schema cache|relation/i.test(customersError) ? `<p>Rode no SQL Editor:</p><pre class="sql">create table if not exists public.customers (
-  id bigint generated always as identity primary key,
-  created_at timestamptz not null default now(),
-  name text not null default '',
-  email text not null unique,
-  phone text not null default ''
-);
-alter table public.customers enable row level security;
-drop policy if exists "registrar cliente" on public.customers;
-drop policy if exists "ler clientes" on public.customers;
-create policy "registrar cliente" on public.customers for insert to anon, authenticated with check (true);
-create policy "ler clientes" on public.customers for select to authenticated using (true);</pre>` : "";
-      return shell("Clientes", "Quem criou conta na loja.", `<section class="panel"><p class="msg">${esc(customersError)}</p>${sql}</section>`);
-    }
-    return shell("Clientes", `${customers.length} ${customers.length === 1 ? "conta criada" : "contas criadas"}.`, `
-      <div class="toolbar">
-        <input id="client-q" type="search" placeholder="Buscar cliente" value="${esc(clientQuery)}" />
-      </div>
-      <section class="panel" id="client-list">${clientRows()}</section>`);
   }
 
   function stockView() {
@@ -783,13 +740,6 @@ create policy "escrita autenticada banners" on public.banners for all to authent
     }
     const kind = document.getElementById("stock-kind");
     if (kind) kind.onchange = () => { stockKind = kind.value; document.getElementById("plist").innerHTML = productRows(stockList()); };
-    const clientFind = document.getElementById("client-q");
-    if (clientFind) {
-      clientFind.oninput = () => {
-        clientQuery = clientFind.value;
-        document.getElementById("client-list").innerHTML = clientRows();
-      };
-    }
     const setForm = document.getElementById("set-form");
     if (setForm) setForm.addEventListener("submit", saveSet);
     const addBanner = document.getElementById("add-banner");
@@ -806,13 +756,8 @@ create policy "escrita autenticada banners" on public.banners for all to authent
       visits = result.data || [];
       visitsError = result.error ? result.error.message : "";
     }
-    if (view === "clients") {
-      const result = await sb.from("customers").select("created_at,name,email,phone").order("created_at", { ascending: false }).limit(1000);
-      customers = result.data || [];
-      customersError = result.error ? result.error.message : "";
-    }
     if (view === "banners") await loadBanners();
-    const views = { clients: clientsView, visits: visitsView, sets: setsView, stock: stockView, estoque: estoqueView, banners: bannersView };
+    const views = { visits: visitsView, sets: setsView, stock: stockView, estoque: estoqueView, banners: bannersView };
     const viewHtml = (views[view] || homeView)();
     root.innerHTML = viewHtml;
     bindDesk();
