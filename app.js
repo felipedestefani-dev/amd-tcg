@@ -861,8 +861,9 @@
             <li>Tentar acessar, extrair em massa ou comprometer o catálogo sem autorização.</li>
             <li>Apresentar o conteúdo da loja como de autoria própria.</li>
           </ul>
-          <h2>Marcas</h2>
-          <p>Pokémon e as marcas apostas nas cartas pertencem aos respectivos titulares. A A.M.D TCG é estabelecimento independente e não se confunde com a Nintendo, a The Pokémon Company ou a The Pokémon Company International.</p>
+          <h2>Propriedade intelectual</h2>
+          <p>As ilustrações, os símbolos e os logotipos de coleção exibidos no catálogo para identificar as cartas são obtidos da Pokémon TCG API (pokemontcg.io), serviço de terceiros. Esses elementos, bem como os textos das cartas, são obras e sinais distintivos de seus respectivos titulares. Pokémon, Nintendo, Creatures, GAME FREAK e The Pokémon Company são marcas de seus proprietários.</p>
+          <p>A A.M.D TCG não é autora dessas obras, nos termos da Lei nº 9.610, de 19 de fevereiro de 1998, nem titular dessas marcas, nos termos da Lei nº 9.279, de 14 de maio de 1996. O uso no site limita-se à identificação do produto físico ofertado. A loja não é patrocinada, endossada nem mantém vínculo oficial com a Nintendo, a Creatures, a GAME FREAK, a The Pokémon Company ou a The Pokémon Company International.</p>
           <h2>Disposições finais</h2>
           <p>O catálogo exibe a disponibilidade nele informada. Atraso de transportadora, falta de estoque ou indisponibilidade do WhatsApp não importam contratação automática. Aplica-se a legislação da República Federativa do Brasil. Comunicações sobre estes Termos devem ser dirigidas ao ${wa}.</p>
           <p>Atualizados em ${updated}.</p>`,
