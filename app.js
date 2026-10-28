@@ -247,6 +247,9 @@
     return `
       <div class="hero">
         <div class="hero-rotator">
+          <a href="#/pokecast" aria-label="Pokecast, todas as quintas-feiras">
+            <img src="assets/banner-pokecast.jpg?v=2" alt="" />
+          </a>
           <a href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer" aria-label="AMD na Jamble, confira já">
             <img src="assets/banner-jamble.jpg?v=2" alt="" />
           </a>
@@ -261,6 +264,7 @@
           <button type="button" aria-label="Primeiro banner"></button>
           <button type="button" aria-label="Segundo banner"></button>
           <button type="button" aria-label="Terceiro banner"></button>
+          <button type="button" aria-label="Quarto banner"></button>
         </div>
       </div>`;
   }
@@ -639,15 +643,28 @@
       return;
     }
 
+    if (name === "pokecast") {
+      document.title = "Pokecast · A.M.D TCG";
+      main.innerHTML = `
+        <h1 class="page-title">Pokecast</h1>
+        <p class="lede">O podcast de Pokémon TCG do @allandomingues.</p>
+        <div class="sets">
+          <a class="set-link" href="${esc(shop.whatsappGroup)}" target="_blank" rel="noopener noreferrer"><strong>Grupo do WhatsApp</strong><span>Avisos dos episódios</span></a>
+          <a class="set-link" href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer"><strong>Lives na Jamble</strong><span>@allandomingues</span></a>
+        </div>`;
+      return;
+    }
+
     if (name === "contato") {
       document.title = "Contato · A.M.D TCG";
       main.innerHTML = `
         <h1 class="page-title">Contato</h1>
-        <p class="lede">Grupo, lives e convite.</p>
+        <p class="lede">Grupo, lives, Instagram e convite.</p>
         <div class="sets">
-          <a class="set-link" href="${esc(shop.whatsappGroup)}" target="_blank" rel="noopener noreferrer"><strong>Grupo do WhatsApp</strong><span>Abrir</span></a>
-          <a class="set-link" href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer"><strong>Lives na Jamble</strong><span>@allandomingues</span></a>
-          <a class="set-link" href="${esc(shop.jambleInvite)}" target="_blank" rel="noopener noreferrer"><strong>Ganhe R$ 75 na Jamble</strong><span>Convite</span></a>
+          <a class="set-link" href="${esc(shop.whatsappGroup)}" target="_blank" rel="noopener noreferrer"><img class="brand-mark" src="assets/icons/whatsapp.svg" alt="" /><strong>Grupo do WhatsApp</strong><span>Abrir</span></a>
+          <a class="set-link" href="${esc(shop.instagram)}" target="_blank" rel="noopener noreferrer"><img class="brand-mark" src="assets/icons/instagram.svg" alt="" /><strong>Instagram</strong><span>@amdtcg</span></a>
+          <a class="set-link" href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer"><img class="brand-mark" src="assets/icons/jamble.jpg?v=3" alt="" /><strong>Lives na Jamble</strong><span>@allandomingues</span></a>
+          <a class="set-link" href="${esc(shop.jambleInvite)}" target="_blank" rel="noopener noreferrer"><img class="brand-mark" src="assets/icons/jamble.jpg?v=3" alt="" /><strong>Ganhe R$ 75 na Jamble</strong><span>Convite</span></a>
         </div>`;
       return;
     }

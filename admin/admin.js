@@ -435,6 +435,7 @@
       "#/avulsos": "Avulsos",
       "#/lacrados": "Lacrados",
       "#/colecoes": "Coleções",
+      "#/pokecast": "Pokecast",
       "#/contato": "Contato",
       "#/sobre": "Sobre",
       "#/cadastro": "Cadastro",

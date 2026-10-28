@@ -6,6 +6,7 @@ window.AMD_SHOP = {
   whatsappGroup: "https://chat.whatsapp.com/HLYawCBOc6K7rlIkm5wyVz",
   jamble: "https://www.jamble.com/u/allandomingues",
   jambleInvite: "https://www.jamble.com/invite/buyer/allandomingues",
+  instagram: "https://www.instagram.com/amdtcg/",
 
   sets: [
     { id: "me6", name: "Reinado Delta", en: "Delta Reign", code: "ME6" },
