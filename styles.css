@@ -540,6 +540,7 @@ button, input, select { font: inherit; color: inherit; }
 .row::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 99px; }
 .row.is-drag { cursor: grabbing; scroll-snap-type: none; }
 .row .card { scroll-snap-align: start; height: 100%; }
+.row .card:hover { transform: none; }
 .set-rail { margin: 0.15rem 0 0.85rem; }
 .set-rail .section-head { margin: 0.15rem 0 0.35rem; }
 .set-rail h3 { margin: 0; font-size: 1rem; letter-spacing: -0.02em; }
@@ -678,6 +679,24 @@ button, input, select { font: inherit; color: inherit; }
   background: #fff;
 }
 .form input:focus { outline: 2px solid #111; outline-offset: 1px; }
+.form .agree {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  color: var(--text);
+  font-size: 0.86rem;
+  font-weight: 550;
+  line-height: 1.4;
+}
+.form .agree input {
+  width: 18px;
+  height: 18px;
+  margin: 0.12rem 0 0;
+  padding: 0;
+  flex: none;
+  accent-color: var(--red);
+}
+.form .agree a { color: var(--ink); font-weight: 700; }
 .msg { min-height: 1.2rem; font-size: 0.9rem; }
 
 .foot {

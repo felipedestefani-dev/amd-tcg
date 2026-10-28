@@ -115,10 +115,18 @@
     return String(url || "").replace(/\/0+(\d+)\.png(?=$|\?)/, (_, digits) => `/${Number(digits)}.png`);
   }
 
+  function safeSrc(url) {
+    const value = String(url || "").trim();
+    if (!value || /[\s<>"']/.test(value)) return "";
+    if (/^(assets\/|\/assets\/)/.test(value)) return plainArt(value);
+    if (/^https?:\/\//i.test(value)) return plainArt(value);
+    return "";
+  }
+
   function imageOf(product) {
-    if (product.image) return plainArt(product.image);
+    if (product.image) return safeSrc(product.image);
     if (product.kind === "sealed" || !product.number) return "";
-    return `https://images.pokemontcg.io/${product.set}/${artFile(product.number)}.png`;
+    return `https://images.pokemontcg.io/${encodeURIComponent(product.set)}/${encodeURIComponent(artFile(product.number))}.png`;
   }
 
   function numberLabel(number) {
@@ -192,10 +200,15 @@
       </article>`;
   }
 
+  function routePart(value) {
+    try { return decodeURIComponent(value || ""); }
+    catch { return ""; }
+  }
+
   function route() {
     const raw = (location.hash || "#/").replace(/^#/, "");
     const parts = raw.split("/").filter(Boolean);
-    return { name: parts[0] || "home", id: decodeURIComponent(parts[1] || ""), from: decodeURIComponent(parts[2] || "") };
+    return { name: parts[0] || "home", id: routePart(parts[1]), from: routePart(parts[2]) };
   }
 
   function markNav(name) {
@@ -550,6 +563,10 @@
               <label>E-mail<input name="email" type="email" required value="${esc(user?.email || "")}" autocomplete="email" /></label>
               <label>Telefone<input name="phone" required value="${esc(user?.phone || "")}" autocomplete="tel" /></label>
               <label>Senha<input name="password" type="password" minlength="6" required autocomplete="new-password" /></label>
+              <label class="agree">
+                <input name="terms" type="checkbox" required />
+                <span>Concordo com os <a href="#/termos">Termos de uso</a>, a <a href="#/privacidade">Política de privacidade</a> e a <a href="#/cookies">Política de cookies</a>.</span>
+              </label>
               <button class="solid" type="submit">Criar conta</button>
             </form>
             <p class="msg" id="signup-msg"></p>
@@ -797,19 +814,32 @@
     };
     const password = String(form.get("password") || "");
     const msg = document.getElementById("signup-msg");
+    if (!form.get("terms")) {
+      msg.textContent = "Aceite os Termos de uso e as políticas para criar a conta.";
+      return;
+    }
     try {
       const sb = await window.AMD_SB.client();
-      if (sb) {
-        const { error } = await sb.auth.signUp({
-          email: profile.email,
-          password,
-          options: { data: { name: profile.name, phone: profile.phone } },
-        });
-        if (error) { msg.textContent = error.message; return; }
-        await saveCustomer(sb, profile);
+      if (!sb) {
+        msg.textContent = "Não foi possível criar a conta agora. Tente de novo.";
+        return;
       }
+      const { error } = await sb.auth.signUp({
+        email: profile.email,
+        password,
+        options: { data: { name: profile.name, phone: profile.phone } },
+      });
+      if (error) {
+        msg.textContent = /already registered|already exists/i.test(error.message || "")
+          ? "Esse e-mail já tem conta. Entre com ele."
+          : "Não foi possível criar a conta. Confira os dados e tente de novo.";
+        return;
+      }
+      await saveCustomer(sb, profile);
     } catch (error) {
       console.warn(error);
+      msg.textContent = "Não foi possível criar a conta agora. Tente de novo.";
+      return;
     }
     msg.textContent = "Conta criada.";
     localStorage.setItem("amd.account", JSON.stringify(profile));
@@ -915,20 +945,22 @@
     const saved = account();
     try {
       const sb = await window.AMD_SB.client();
-      if (sb) {
-        const { data, error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) { msg.textContent = error.message; return; }
-        const meta = data.user?.user_metadata || {};
-        const profile = rememberAccount({
-          name: await nameFor(sb, data.user?.email || email, meta.name),
-          email: data.user?.email || email,
-          phone: meta.phone || saved?.phone || "",
-        });
-        await saveCustomer(sb, profile);
-      } else if (!saved || saved.email !== email) {
-        msg.textContent = "Cadastre-se primeiro.";
+      if (!sb) {
+        msg.textContent = "Não foi possível entrar agora. Tente de novo.";
         return;
       }
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) {
+        msg.textContent = "E-mail ou senha incorretos.";
+        return;
+      }
+      const meta = data.user?.user_metadata || {};
+      const profile = rememberAccount({
+        name: await nameFor(sb, data.user?.email || email, meta.name),
+        email: data.user?.email || email,
+        phone: meta.phone || saved?.phone || "",
+      });
+      await saveCustomer(sb, profile);
     } catch (error) {
       msg.textContent = "Não foi possível entrar.";
       return;
