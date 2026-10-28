@@ -78,6 +78,20 @@
       .replace(/"/g, "&quot;");
   }
 
+  function plainField(value, max) {
+    return String(value ?? "").replace(/[\u0000-\u001F\u007F]/g, "").trim().slice(0, max);
+  }
+
+  function validEmail(value) {
+    const email = plainField(value, 120).toLowerCase();
+    return /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(email) ? email : "";
+  }
+
+  function validPhone(value) {
+    const phone = plainField(value, 20);
+    return /^[0-9+()\-\s]{8,20}$/.test(phone) ? phone : "";
+  }
+
   function loggedIn() {
     return Boolean(sessionStorage.getItem("amd.session"));
   }
@@ -379,7 +393,11 @@
       sent = true;
       window.AMD_SB.client().then(async (sb) => {
         if (!sb) { sent = false; tracking.delete(path); return; }
-        const { error } = await sb.from("visits").insert({ path, visitor, city: city || "" });
+        const { error } = await sb.from("visits").insert({
+          path: plainField(path, 120) || "#/",
+          visitor: plainField(visitor, 64),
+          city: plainField(city, 80),
+        });
         if (error) { sent = false; tracking.delete(path); return; }
         sessionStorage.setItem("amd.tracked", seen.concat(path).join("|"));
       }).catch(() => { sent = false; tracking.delete(path); });
@@ -496,7 +514,7 @@
       bindRails();
     });
     const { name, id, from } = route();
-    const query = qInput.value.trim().toLowerCase();
+    const query = plainField(qInput.value, 80).toLowerCase();
     markNav(name);
     if (name === "set" && shop.sets.some((set) => set.id === id)) paintSetPick(id);
     else if (name === "home") paintSetPick("");
@@ -559,10 +577,10 @@
             <h1 class="page-title">Criar conta</h1>
             <p class="lede">Preencha seus dados para criar a conta.</p>
             <form class="form" id="signup">
-              <label>Nome<input name="name" required value="${esc(user?.name || "")}" autocomplete="name" /></label>
-              <label>E-mail<input name="email" type="email" required value="${esc(user?.email || "")}" autocomplete="email" /></label>
-              <label>Telefone<input name="phone" required value="${esc(user?.phone || "")}" autocomplete="tel" /></label>
-              <label>Senha<input name="password" type="password" minlength="6" required autocomplete="new-password" /></label>
+              <label>Nome<input name="name" required maxlength="80" value="${esc(user?.name || "")}" autocomplete="name" /></label>
+              <label>E-mail<input name="email" type="email" required maxlength="120" value="${esc(user?.email || "")}" autocomplete="email" /></label>
+              <label>Telefone<input name="phone" required maxlength="20" inputmode="tel" value="${esc(user?.phone || "")}" autocomplete="tel" /></label>
+              <label>Senha<input name="password" type="password" minlength="6" maxlength="72" required autocomplete="new-password" /></label>
               <label class="agree">
                 <input name="terms" type="checkbox" required />
                 <span>Concordo com os <a href="#/termos">Termos de uso</a>, a <a href="#/privacidade">Política de privacidade</a> e a <a href="#/cookies">Política de cookies</a>.</span>
@@ -595,8 +613,8 @@
             <h1 class="page-title">Entrar</h1>
             <p class="lede">${personName(user?.name, user?.email) || "Bem-vindo de volta."}</p>
             <form class="form" id="signin">
-              <label>E-mail<input name="email" type="email" required value="${esc(user?.email || "")}" autocomplete="email" /></label>
-              <label>Senha<input name="password" type="password" required autocomplete="current-password" /></label>
+              <label>E-mail<input name="email" type="email" required maxlength="120" value="${esc(user?.email || "")}" autocomplete="email" /></label>
+              <label>Senha<input name="password" type="password" required maxlength="72" autocomplete="current-password" /></label>
               <button class="solid" type="submit">Entrar</button>
             </form>
             <p class="msg" id="signin-msg"></p>
@@ -808,12 +826,17 @@
     event.preventDefault();
     const form = new FormData(event.target);
     const profile = {
-      name: personName(form.get("name")),
-      email: String(form.get("email") || "").trim(),
-      phone: String(form.get("phone") || "").trim(),
+      name: personName(plainField(form.get("name"), 80)),
+      email: validEmail(form.get("email")),
+      phone: validPhone(form.get("phone")),
     };
-    const password = String(form.get("password") || "");
+    if (/[;<>]|--|\/\*/.test(profile.name)) profile.name = "";
+    const password = plainField(form.get("password"), 72);
     const msg = document.getElementById("signup-msg");
+    if (!profile.name || !profile.email || !profile.phone) {
+      msg.textContent = "Use nome, e-mail e telefone válidos.";
+      return;
+    }
     if (!form.get("terms")) {
       msg.textContent = "Aceite os Termos de uso e as políticas para criar a conta.";
       return;
@@ -849,11 +872,11 @@
   }
 
   async function saveCustomer(sb, profile) {
-    if (!sb || !profile?.email) return;
+    if (!sb || !validEmail(profile?.email)) return;
     const { error } = await sb.from("customers").insert({
-      name: profile.name || "",
-      email: profile.email,
-      phone: profile.phone || "",
+      name: plainField(profile.name, 80),
+      email: validEmail(profile.email),
+      phone: validPhone(profile.phone),
     });
     if (error && !/duplicate|unique/i.test(error.message || "")) console.warn(error.message);
   }
@@ -939,9 +962,13 @@
   async function onSignin(event) {
     event.preventDefault();
     const form = new FormData(event.target);
-    const email = String(form.get("email") || "").trim();
-    const password = String(form.get("password") || "");
     const msg = document.getElementById("signin-msg");
+    const email = validEmail(form.get("email"));
+    const password = plainField(form.get("password"), 72);
+    if (!email || !password) {
+      msg.textContent = "E-mail ou senha incorretos.";
+      return;
+    }
     const saved = account();
     try {
       const sb = await window.AMD_SB.client();

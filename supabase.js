@@ -1,14 +1,10 @@
-/* Chave anon é pública. A service_role nunca entra aqui. */
+/* Chave anon é pública. A service_role nunca entra aqui. O endereço não vem do navegador. */
 window.AMD_SB = {
   readConfig() {
     return {
-      url: (localStorage.getItem("amd.sb.url") || "https://ynifimqhiyjckpnnstzi.supabase.co").trim(),
-      anonKey: (localStorage.getItem("amd.sb.key") || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InluaWZpbXFoaXlqY2twbm5zdHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwOTIxMDgsImV4cCI6MjEwODY2ODEwOH0.6OfUbx0ASnFafoYiQfW5dqcnYotlSUnyuuSiut5soPA").trim(),
+      url: "https://ynifimqhiyjckpnnstzi.supabase.co",
+      anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InluaWZpbXFoaXlqY2twbm5zdHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwOTIxMDgsImV4cCI6MjEwODY2ODEwOH0.6OfUbx0ASnFafoYiQfW5dqcnYotlSUnyuuSiut5soPA",
     };
-  },
-  saveConfig(url, anonKey) {
-    localStorage.setItem("amd.sb.url", String(url || "").trim());
-    localStorage.setItem("amd.sb.key", String(anonKey || "").trim());
   },
   async client() {
     const { url, anonKey } = this.readConfig();

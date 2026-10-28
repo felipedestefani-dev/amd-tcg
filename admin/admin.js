@@ -45,6 +45,18 @@
     return product?.kind || "";
   }
 
+  function plainField(value, max) {
+    return String(value ?? "").replace(/[\u0000-\u001F\u007F]/g, "").trim().slice(0, max);
+  }
+
+  function safeImage(url) {
+    const value = plainField(url, 1500000);
+    if (!value) return "";
+    if (value.startsWith("data:image/jpeg;base64,")) return value;
+    if (/^(https?:\/\/|\/assets\/|assets\/)/i.test(value) && !/[\s<>"']/.test(value)) return value.slice(0, 500);
+    return "";
+  }
+
   function esc(value) {
     return String(value ?? "")
       .replace(/&/g, "&amp;")
@@ -727,10 +739,10 @@ create policy "ler clientes" on public.customers for select to authenticated usi
     event.preventDefault();
     const form = new FormData(event.target);
     const row = {
-      id: String(form.get("id") || "").trim(),
-      name: String(form.get("name") || "").trim(),
-      code: String(form.get("code") || "").trim(),
-      sort: shop.sets.findIndex((set) => set.id === String(form.get("id") || "").trim()),
+      id: plainField(form.get("id"), 40).replace(/[^a-z0-9-]/gi, ""),
+      name: plainField(form.get("name"), 80),
+      code: plainField(form.get("code"), 12).replace(/[^a-z0-9]/gi, ""),
+      sort: shop.sets.findIndex((set) => set.id === plainField(form.get("id"), 40).replace(/[^a-z0-9-]/gi, "")),
     };
     const msg = document.getElementById("desk-msg");
     if (!row.id || !row.name || !row.code) { msg.textContent = "Código, sigla e nome são obrigatórios."; return; }
@@ -957,10 +969,12 @@ create policy "ler clientes" on public.customers for select to authenticated usi
 
   function tcgQuery(parsed, number, withPrinted) {
     const parts = [];
-    const name = parsed.name.replace(/"/g, "");
+    const name = parsed.name.replace(/[^a-z0-9\u00c0-\u024f .'-]/gi, "").trim();
     if (name) parts.push(name.includes(" ") ? `name:"${name}"*` : `name:${name}*`);
-    if (number) parts.push(`number:${number}`);
-    if (withPrinted && parsed.printed) parts.push(`set.printedTotal:${parsed.printed}`);
+    const cardNumber = String(number || "").replace(/[^a-z0-9/]/gi, "").slice(0, 24);
+    const printed = String(parsed.printed || "").replace(/\D/g, "").slice(0, 4);
+    if (cardNumber) parts.push(`number:${cardNumber}`);
+    if (withPrinted && printed) parts.push(`set.printedTotal:${printed}`);
     return parts.join(" ");
   }
 
@@ -1211,19 +1225,20 @@ create policy "ler clientes" on public.customers for select to authenticated usi
   async function saveProduct(event) {
     event.preventDefault();
     const form = new FormData(event.target);
+    const kind = form.get("kind") === "presale" ? "sealed" : form.get("kind");
     const row = {
-      id: String(form.get("id") || "").trim(),
-      kind: form.get("kind") === "presale" ? "sealed" : form.get("kind"),
-      name: String(form.get("name") || "").trim(),
-      set_id: form.get("set_id"),
-      number: String(form.get("number") || "").trim(),
-      rarity: String(form.get("rarity") || "").trim(),
-      condition: String(form.get("condition") || "").trim(),
-      lang: String(form.get("lang") || "").trim(),
-      finish: String(form.get("finish") || "").trim(),
-      qty: Number(form.get("qty") || 0),
+      id: plainField(form.get("id"), 48).replace(/[^a-z0-9-]/gi, ""),
+      kind: kind === "single" || kind === "sealed" ? kind : "",
+      name: plainField(form.get("name"), 120),
+      set_id: plainField(form.get("set_id"), 40).replace(/[^a-z0-9-]/gi, ""),
+      number: plainField(form.get("number"), 24),
+      rarity: plainField(form.get("rarity"), 40),
+      condition: plainField(form.get("condition"), 24),
+      lang: plainField(form.get("lang"), 8).toUpperCase(),
+      finish: plainField(form.get("finish"), 40),
+      qty: Math.max(0, Math.min(9999, Math.round(Number(form.get("qty")) || 0))),
       price: readPrice(form.get("price")),
-      image: draftImage || "",
+      image: safeImage(draftImage),
     };
     const msg = document.getElementById("desk-msg");
     if (!row.id || !row.name || !row.set_id) { msg.textContent = "Código, nome e coleção são obrigatórios."; return; }
