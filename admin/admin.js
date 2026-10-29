@@ -28,6 +28,10 @@
   let bannersError = "";
   let bannerEditing = null;
   let bannerImage = "";
+  let casts = [];
+  let castsError = "";
+  let castEditing = null;
+  let castFlyer = "";
 
   const RARITY = {
     Common: "Comum",
@@ -351,6 +355,7 @@
             ${item("estoque", "Estoque", "Estoque", "/assets/icons/sealed.png")}
             ${item("sets", "Coleções", "Coleções", "/assets/icons/sets.png")}
             ${item("banners", "Banners", "Banners", "/assets/icons/banners.svg")}
+            ${item("pokecast", "Pokecast", "Cast", "/assets/icons/pokecast.png")}
             ${item("visits", "Visitas", "Visitas", "/assets/icons/search.png")}
           </nav>
           <div class="desk-tools">
@@ -635,6 +640,73 @@ create policy "escrita autenticada banners" on public.banners for all to authent
       <div class="plist" id="banner-list">${bannerRows()}</div>`);
   }
 
+  const CAST_SQL = `create table if not exists public.pokecasts (
+  id text primary key,
+  starts_at timestamptz not null,
+  platform text not null default 'jamble',
+  link text not null default '',
+  host text not null default '',
+  guests text not null default '',
+  topic text not null default '',
+  flyer text not null default ''
+);
+alter table public.pokecasts enable row level security;
+drop policy if exists "leitura publica pokecasts" on public.pokecasts;
+drop policy if exists "escrita autenticada pokecasts" on public.pokecasts;
+create policy "leitura publica pokecasts" on public.pokecasts for select using (true);
+create policy "escrita autenticada pokecasts" on public.pokecasts for all to authenticated using (true) with check (true);`;
+
+  function castPlatform(value) {
+    const names = { jamble: "Jamble", instagram: "Instagram", youtube: "YouTube" };
+    return names[value] || "Outra";
+  }
+
+  function castWhen(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    const day = date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+    const time = date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    return `${day} · ${time}`;
+  }
+
+  function castInputValue(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    const pad = (part) => String(part).padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
+
+  function castRows() {
+    if (!casts.length) return `<p class="empty">Nenhum Pokecast marcado.</p>`;
+    const now = Date.now();
+    return casts.map((row) => {
+      const gone = new Date(row.starts_at).getTime() < now;
+      return `
+        <div class="prow">
+          <button class="prow-open" type="button" data-cast-edit="${esc(row.id)}">
+            ${row.flyer ? `<img class="story-shot" src="${esc(row.flyer)}" alt="" />` : `<span class="story-shot"></span>`}
+            <span><strong>${esc(row.host || "Sem nome")}</strong><span>${esc(castWhen(row.starts_at))} · ${esc(castPlatform(row.platform))}${gone ? " · já foi" : ""}</span></span>
+          </button>
+          <div class="row-actions">
+            <button class="ghost danger row-delete" type="button" data-cast-remove="${esc(row.id)}">Excluir</button>
+          </div>
+        </div>`;
+    }).join("");
+  }
+
+  function pokecastView() {
+    if (castsError) {
+      const sql = /pokecasts|schema cache|relation/i.test(castsError) ? `<p>Rode no SQL Editor:</p><pre class="sql">${esc(CAST_SQL)}</pre>` : "";
+      return shell("Pokecast", "Próximos episódios da loja.", `<section class="panel"><p class="msg">${esc(castsError)}</p>${sql}</section>`);
+    }
+    return shell("Pokecast", "Data, horário, plataforma, convidados e o flyer da story.", `
+      <div class="toolbar">
+        <button class="solid" type="button" id="add-cast">Adicionar Pokecast</button>
+      </div>
+      <div id="editor-slot"></div>
+      <div class="plist" id="cast-list">${castRows()}</div>`);
+  }
+
   function setsView() {
     return shell("Coleções", "Escreva o nome para ver a coleção.", `
       <div class="set-pick">
@@ -653,7 +725,7 @@ create policy "escrita autenticada banners" on public.banners for all to authent
 
   function bindDesk() {
     root.querySelectorAll("[data-view]").forEach((button) => {
-      button.onclick = () => { view = button.dataset.view; editing = null; bannerEditing = null; paintDesk(); };
+      button.onclick = () => { view = button.dataset.view; editing = null; bannerEditing = null; castEditing = null; paintDesk(); };
     });
     document.getElementById("sair").onclick = async () => { await sb.auth.signOut(); session = null; paint(); };
     const openNew = async (kind) => {
@@ -672,6 +744,20 @@ create policy "escrita autenticada banners" on public.banners for all to authent
     if (!root.dataset.rows) {
       root.dataset.rows = "1";
       root.addEventListener("click", async (event) => {
+      const castRemove = event.target.closest("[data-cast-remove]");
+      if (castRemove) {
+        event.preventDefault();
+        const row = casts.find((item) => item.id === castRemove.dataset.castRemove);
+        if (row && confirm(`Excluir o Pokecast de ${row.host || "sem nome"}?`)) await removeCast(row.id);
+        return;
+      }
+      const castEdit = event.target.closest("[data-cast-edit]");
+      if (castEdit) {
+        event.preventDefault();
+        castEditing = castEdit.dataset.castEdit;
+        openCastForm(casts.find((item) => item.id === castEditing));
+        return;
+      }
       const bannerRemove = event.target.closest("[data-banner-remove]");
       if (bannerRemove) {
         event.preventDefault();
@@ -744,6 +830,8 @@ create policy "escrita autenticada banners" on public.banners for all to authent
     if (setForm) setForm.addEventListener("submit", saveSet);
     const addBanner = document.getElementById("add-banner");
     if (addBanner) addBanner.onclick = () => { bannerEditing = "new"; openBannerForm(null); };
+    const addCast = document.getElementById("add-cast");
+    if (addCast) addCast.onclick = () => { castEditing = "new"; openCastForm(null); };
   }
 
   async function paintDesk() {
@@ -757,12 +845,14 @@ create policy "escrita autenticada banners" on public.banners for all to authent
       visitsError = result.error ? result.error.message : "";
     }
     if (view === "banners") await loadBanners();
-    const views = { visits: visitsView, sets: setsView, stock: stockView, estoque: estoqueView, banners: bannersView };
+    if (view === "pokecast") await loadCasts();
+    const views = { visits: visitsView, sets: setsView, stock: stockView, estoque: estoqueView, banners: bannersView, pokecast: pokecastView };
     const viewHtml = (views[view] || homeView)();
     root.innerHTML = viewHtml;
     bindDesk();
     if (view === "stock" && editing) openEditor(editing);
     if (view === "banners" && bannerEditing) openBannerForm(bannerEditing === "new" ? null : banners.find((item) => item.id === bannerEditing));
+    if (view === "pokecast" && castEditing) openCastForm(castEditing === "new" ? null : casts.find((item) => item.id === castEditing));
   }
 
   async function loadBanners() {
@@ -915,6 +1005,111 @@ create policy "escrita autenticada banners" on public.banners for all to authent
     const { error } = await sb.from("banners").delete().eq("id", id);
     if (msg) msg.textContent = error ? error.message : "Banner excluído.";
     if (!error) { bannerEditing = null; paintDesk(); }
+  }
+
+  async function loadCasts() {
+    const result = await sb.from("pokecasts").select("id,starts_at,platform,link,host,guests,topic,flyer").order("starts_at", { ascending: true });
+    castsError = result.error ? result.error.message : "";
+    casts = result.data || [];
+  }
+
+  function openCastForm(row) {
+    const slot = document.getElementById("editor-slot");
+    if (!slot) return;
+    castFlyer = row?.flyer || "";
+    const platform = ["jamble", "instagram", "youtube", "other"].includes(row?.platform) ? row.platform : "jamble";
+    const options = [["jamble", "Jamble"], ["instagram", "Instagram"], ["youtube", "YouTube"], ["other", "Outra"]];
+    slot.innerHTML = `<div class="panel" style="box-shadow:none">
+      <form id="cast-form" class="fields">
+        <img class="story-preview" id="cast-preview" alt="" ${castFlyer ? `src="${esc(castFlyer)}"` : "hidden"} />
+        <label class="ghost photo-btn">Flyer da story<input id="cast-file" type="file" accept="image/*" hidden /></label>
+        <label>Data e horário<input name="starts" type="datetime-local" required value="${esc(castInputValue(row?.starts_at))}" /></label>
+        <label>Plataforma
+          <select name="platform" id="cast-platform">
+            ${options.map(([value, label]) => `<option value="${value}"${value === platform ? " selected" : ""}>${label}</option>`).join("")}
+          </select>
+        </label>
+        <label>Link da live<input name="link" type="url" placeholder="https://" value="${esc(row?.link || "")}" /></label>
+        ${field("host", "Com quem", row?.host || "")}
+        <label>Convidados<textarea name="guests" maxlength="200" rows="2">${esc(row?.guests || "")}</textarea></label>
+        <label>Papo<textarea name="topic" maxlength="240" rows="3">${esc(row?.topic || "")}</textarea></label>
+        <div class="actions">
+          <button class="solid" type="submit">${row ? "Salvar Pokecast" : "Adicionar Pokecast"}</button>
+          <button class="ghost" type="button" id="cast-cancel">Cancelar</button>
+        </div>
+      </form>
+    </div>`;
+    document.getElementById("cast-cancel").onclick = () => { castEditing = null; castFlyer = ""; slot.innerHTML = ""; };
+    document.getElementById("cast-file").addEventListener("change", async (event) => {
+      const file = event.target.files && event.target.files[0];
+      const msg = document.getElementById("desk-msg");
+      if (!file) return;
+      try {
+        castFlyer = await readStory(file);
+        const preview = document.getElementById("cast-preview");
+        preview.src = castFlyer;
+        preview.hidden = false;
+      } catch (error) {
+        if (msg) msg.textContent = error.message;
+      }
+    });
+    document.getElementById("cast-form").addEventListener("submit", (event) => saveCast(event, row));
+  }
+
+  function readStory(file) {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      const url = URL.createObjectURL(file);
+      image.onload = () => {
+        const scale = Math.min(1, 720 / image.width, 1280 / image.height);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      image.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Não foi possível ler o flyer.")); };
+      image.src = url;
+    });
+  }
+
+  async function saveCast(event, row) {
+    event.preventDefault();
+    const form = new FormData(event.target);
+    const msg = document.getElementById("desk-msg");
+    const starts = new Date(String(form.get("starts") || ""));
+    const platform = ["jamble", "instagram", "youtube", "other"].includes(String(form.get("platform"))) ? String(form.get("platform")) : "";
+    const link = bannerHref(form.get("link"));
+    const host = plainField(form.get("host"), 80);
+    const guests = plainField(form.get("guests"), 200);
+    const topic = plainField(form.get("topic"), 240);
+    const flyer = safeImage(castFlyer);
+    if (Number.isNaN(starts.getTime())) { msg.textContent = "Informe a data e o horário."; return; }
+    if (!platform) { msg.textContent = "Escolha a plataforma."; return; }
+    if (!host) { msg.textContent = "Diga com quem é o Pokecast."; return; }
+    if (!topic) { msg.textContent = "Escreva o papo."; return; }
+    if (String(form.get("link") || "").trim() && !link) { msg.textContent = "O link precisa começar com https://."; return; }
+    const id = row ? row.id : `cast-${Date.now().toString(36)}`;
+    const { error } = await sb.from("pokecasts").upsert({
+      id,
+      starts_at: starts.toISOString(),
+      platform,
+      link,
+      host,
+      guests,
+      topic,
+      flyer,
+    });
+    msg.textContent = error ? error.message : "Pokecast salvo.";
+    if (!error) { castEditing = null; castFlyer = ""; paintDesk(); }
+  }
+
+  async function removeCast(id) {
+    const msg = document.getElementById("desk-msg");
+    const { error } = await sb.from("pokecasts").delete().eq("id", id);
+    if (msg) msg.textContent = error ? error.message : "Pokecast excluído.";
+    if (!error) { castEditing = null; paintDesk(); }
   }
 
   async function moveBanner(id, dir) {

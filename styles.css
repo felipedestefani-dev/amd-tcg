@@ -723,18 +723,39 @@ button, input, select { font: inherit; color: inherit; }
   border-radius: var(--radius);
 }
 .quadros li { margin: 0.35rem 0; }
+.poke-feature {
+  display: grid;
+  grid-template-columns: min(260px, 70vw) minmax(0, 1fr);
+  gap: 1.1rem;
+  align-items: start;
+  margin-bottom: 0.4rem;
+}
+.poke-story {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  border-radius: 22px;
+  background: #111;
+}
+.poke-copy h2 { margin: 0 0 0.35rem; }
+.poke-copy p { margin: 0.35rem 0; }
+.poke-copy .ask { margin-top: 0.8rem; }
+@media (max-width: 720px) {
+  .poke-feature { grid-template-columns: min(220px, 62vw); }
+}
 .quintas { display: grid; gap: 0.45rem; }
 .quinta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 0.75rem;
   padding: 0.85rem 1rem;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: var(--radius);
 }
+.quinta strong { flex: 1; }
 .quinta span { color: var(--muted); }
+.quinta a { color: var(--red); font-weight: 700; text-decoration: none; white-space: nowrap; }
 .sets { display: grid; gap: 0.45rem; }
 .set-link {
   display: flex;
@@ -962,15 +983,19 @@ body.has-cookie { padding-bottom: 0; }
 .prow .thumb { width: 36px; height: 50px; object-fit: cover; border-radius: 4px; background: #f3f4f6; flex: none; }
 .banner-shot { width: 148px; height: 49px; object-fit: cover; border-radius: 8px; background: #2a0204; flex: none; }
 .banner-preview { width: 100%; max-width: 520px; aspect-ratio: 1024 / 341; object-fit: cover; border-radius: 12px; background: #2a0204; }
+.story-shot { display: block; width: 54px; height: 96px; object-fit: cover; border-radius: 8px; background: #111; flex: none; }
+.story-preview { width: 180px; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 16px; background: #111; }
+.story-preview[hidden] { display: none !important; }
 .fields { display: grid; gap: 0.65rem; }
 .fields label, .row-2 label { display: grid; gap: 0.25rem; font-size: 0.82rem; font-weight: 650; color: var(--muted); }
-.fields input, .fields select, .row-2 input, .row-2 select {
+.fields input, .fields select, .fields textarea, .row-2 input, .row-2 select {
   height: 44px;
   padding: 0 0.8rem;
   border-radius: 12px;
   border: 1px solid var(--line);
   background: #fff;
 }
+.fields textarea { height: auto; padding: 0.7rem 0.8rem; resize: vertical; }
 .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
 .actions { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0.8rem 0; }
 .plist { display: grid; gap: 0.4rem; }

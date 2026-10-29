@@ -371,6 +371,114 @@
     return `<a class="back" href="${esc(href)}"${scroll ? ` data-scroll="${scroll}"` : ""}><img src="assets/icons/back.png" alt="" />Voltar</a>`;
   }
 
+  function castWhen(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    const day = date.toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
+    const time = date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    return `${day}, ${time}`;
+  }
+
+  function castPlatform(value) {
+    const names = { jamble: "Jamble", instagram: "Instagram", youtube: "YouTube" };
+    return names[value] || "Outra";
+  }
+
+  function castLink(item) {
+    const link = String(item.link || "");
+    if (/^https:\/\//i.test(link)) return link;
+    if (item.platform === "instagram") return shop.instagram;
+    if (item.platform === "jamble") return shop.jamble;
+    return "";
+  }
+
+  function castCard(item) {
+    const link = castLink(item);
+    return `
+      <article class="quinta">
+        ${item.flyer ? `<img class="story-shot" src="${esc(item.flyer)}" alt="" />` : ""}
+        <strong>${esc(item.host)}</strong>
+        <span>${esc(castWhen(item.starts_at))} · ${esc(castPlatform(item.platform))}</span>
+        ${link ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">Abrir</a>` : ""}
+      </article>`;
+  }
+
+  function pokecastPage() {
+    const items = Array.isArray(shop.pokecasts) ? shop.pokecasts : [];
+    const now = Date.now();
+    const upcoming = items.filter((item) => new Date(item.starts_at).getTime() >= now);
+    const past = items.filter((item) => new Date(item.starts_at).getTime() < now).reverse();
+    const links = `
+      <div class="sets">
+        <a class="set-link" href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer"><img class="brand-mark" src="assets/icons/jamble.jpg?v=3" alt="" /><strong>Assistir na Jamble</strong><span>@allandomingues</span></a>
+        <a class="set-link" href="${esc(shop.whatsappGroup)}" target="_blank" rel="noopener noreferrer"><img class="brand-mark" src="assets/icons/whatsapp.svg" alt="" /><strong>Grupo do WhatsApp</strong><span>Aviso do episódio</span></a>
+      </div>`;
+    if (!items.length) {
+      const thursdays = nextThursdays(4);
+      const when = (date) => date.toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
+      const later = thursdays.slice(1).map((date) => `
+        <article class="quinta">
+          <strong>${esc(when(date))}</strong>
+          <span>Convidado a anunciar</span>
+        </article>`).join("");
+      return `
+        <img class="poke-banner" src="assets/banner-pokecast.jpg?v=2" alt="Pokecast, todas as quintas-feiras" />
+        <h1 class="page-title">Pokecast</h1>
+        <p class="lede">Toda quinta-feira na Jamble, com um convidado diferente.</p>
+        <section class="shelf">
+          <div class="section-head"><h2>Esta quinta</h2></div>
+          <p class="lede">${esc(when(thursdays[0]))}. Convidado a anunciar.</p>
+          ${links}
+        </section>
+        <section class="shelf">
+          <div class="section-head"><h2>Próximas quintas</h2></div>
+          <div class="quintas">${later}</div>
+        </section>
+        <section class="shelf">
+          <div class="section-head"><h2>Episódios</h2></div>
+          <p class="empty">Os episódios aparecem aqui depois de cada quinta.</p>
+        </section>`;
+    }
+    const next = upcoming[0];
+    const rest = upcoming.slice(1);
+    const watch = next ? castLink(next) : "";
+    const feature = next ? `
+      <section class="shelf">
+        <div class="section-head"><h2>Próximo</h2></div>
+        <div class="poke-feature">
+          ${next.flyer ? `<img class="poke-story" src="${esc(next.flyer)}" alt="Flyer de ${esc(next.host)}" />` : ""}
+          <div class="poke-copy">
+            <h2>${esc(next.host)}</h2>
+            <p class="lede">${esc(castWhen(next.starts_at))} · ${esc(castPlatform(next.platform))}</p>
+            ${next.guests ? `<p><strong>Convidados.</strong> ${esc(next.guests)}</p>` : ""}
+            <p>${esc(next.topic)}</p>
+            ${watch ? `<a class="ask" href="${esc(watch)}" target="_blank" rel="noopener noreferrer">Assistir</a>` : ""}
+          </div>
+        </div>
+        ${links}
+      </section>` : `
+      <section class="shelf">
+        <div class="section-head"><h2>Próximo</h2></div>
+        <p class="empty">O próximo episódio ainda não foi marcado.</p>
+        ${links}
+      </section>`;
+    const later = rest.length ? `
+      <section class="shelf">
+        <div class="section-head"><h2>Depois</h2></div>
+        <div class="quintas">${rest.map(castCard).join("")}</div>
+      </section>` : "";
+    const done = past.length ? `
+      <section class="shelf">
+        <div class="section-head"><h2>Episódios</h2></div>
+        <div class="quintas">${past.map(castCard).join("")}</div>
+      </section>` : "";
+    return `
+      <img class="poke-banner" src="assets/banner-pokecast.jpg?v=2" alt="Pokecast" />
+      <h1 class="page-title">Pokecast</h1>
+      <p class="lede">${esc(next ? next.topic : "Os episódios ficam aqui.")}</p>
+      ${feature}${later}${done}`;
+  }
+
   function nextThursdays(count) {
     const dates = [];
     const cursor = new Date();
@@ -599,33 +707,7 @@
 
     if (name === "pokecast") {
       document.title = "Pokecast · A.M.D TCG";
-      const thursdays = nextThursdays(4);
-      const when = (date) => date.toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
-      const upcoming = thursdays.slice(1).map((date) => `
-        <article class="quinta">
-          <strong>${esc(when(date))}</strong>
-          <span>Convidado a anunciar</span>
-        </article>`).join("");
-      main.innerHTML = `
-        <img class="poke-banner" src="assets/banner-pokecast.jpg?v=2" alt="Pokecast, todas as quintas-feiras" />
-        <h1 class="page-title">Pokecast</h1>
-        <p class="lede">Toda quinta-feira na Jamble, com um convidado diferente.</p>
-        <section class="shelf">
-          <div class="section-head"><h2>Esta quinta</h2></div>
-          <p class="lede">${esc(when(thursdays[0]))}. Convidado a anunciar.</p>
-          <div class="sets">
-            <a class="set-link" href="${esc(shop.jamble)}" target="_blank" rel="noopener noreferrer"><img class="brand-mark" src="assets/icons/jamble.jpg?v=3" alt="" /><strong>Assistir na Jamble</strong><span>@allandomingues</span></a>
-            <a class="set-link" href="${esc(shop.whatsappGroup)}" target="_blank" rel="noopener noreferrer"><img class="brand-mark" src="assets/icons/whatsapp.svg" alt="" /><strong>Grupo do WhatsApp</strong><span>Aviso do episódio</span></a>
-          </div>
-        </section>
-        <section class="shelf">
-          <div class="section-head"><h2>Próximas quintas</h2></div>
-          <div class="quintas">${upcoming}</div>
-        </section>
-        <section class="shelf">
-          <div class="section-head"><h2>Episódios</h2></div>
-          <p class="empty">Os episódios aparecem aqui depois de cada quinta.</p>
-        </section>`;
+      main.innerHTML = pokecastPage();
       return;
     }
 
@@ -858,11 +940,24 @@
     try {
       const sb = await window.AMD_SB.client();
       if (!sb) return;
-      const [{ data: sets, error: setError }, { data: products, error: productError }, bannerResult] = await Promise.all([
+      const [{ data: sets, error: setError }, { data: products, error: productError }, bannerResult, castResult] = await Promise.all([
         sb.from("sets").select("id,name,code,sort").order("sort"),
         sb.from("products").select("id,kind,name,set_id,number,rarity,condition,lang,finish,qty,price,image").order("name"),
         sb.from("banners").select("id,image,href,label,scroll,sort").order("sort"),
+        sb.from("pokecasts").select("id,starts_at,platform,link,host,guests,topic,flyer").order("starts_at"),
       ]);
+      if (castResult && !castResult.error && Array.isArray(castResult.data)) {
+        shop.pokecasts = castResult.data.filter((row) => row.host && row.topic).map((row) => ({
+          id: row.id,
+          starts_at: row.starts_at,
+          platform: row.platform || "",
+          link: row.link || "",
+          host: row.host || "",
+          guests: row.guests || "",
+          topic: row.topic || "",
+          flyer: row.flyer || "",
+        }));
+      }
       if (bannerResult && !bannerResult.error && Array.isArray(bannerResult.data) && bannerResult.data.length) {
         shop.banners = bannerResult.data.filter((row) => row.id !== "__ready" && row.image).map((row) => ({
           id: row.id,

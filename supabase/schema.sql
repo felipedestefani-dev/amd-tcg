@@ -115,3 +115,34 @@ create policy "escrita autenticada banners"
   to authenticated
   using (true)
   with check (true);
+
+create table if not exists public.pokecasts (
+  id text primary key,
+  starts_at timestamptz not null,
+  platform text not null default 'jamble',
+  link text not null default '',
+  host text not null default '',
+  guests text not null default '',
+  topic text not null default '',
+  flyer text not null default '',
+  constraint pokecasts_platform_len check (char_length(platform) <= 20),
+  constraint pokecasts_link_len check (char_length(link) <= 500),
+  constraint pokecasts_host_len check (char_length(host) <= 80),
+  constraint pokecasts_guests_len check (char_length(guests) <= 200),
+  constraint pokecasts_topic_len check (char_length(topic) <= 240)
+);
+
+alter table public.pokecasts enable row level security;
+
+drop policy if exists "leitura publica pokecasts" on public.pokecasts;
+drop policy if exists "escrita autenticada pokecasts" on public.pokecasts;
+
+create policy "leitura publica pokecasts"
+  on public.pokecasts for select
+  using (true);
+
+create policy "escrita autenticada pokecasts"
+  on public.pokecasts for all
+  to authenticated
+  using (true)
+  with check (true);
