@@ -996,6 +996,7 @@ body.has-cookie { padding-bottom: 0; }
   background: #fff;
 }
 .fields textarea { height: auto; padding: 0.7rem 0.8rem; resize: vertical; }
+.fields small { font-weight: 500; }
 .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
 .actions { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0.8rem 0; }
 .plist { display: grid; gap: 0.4rem; }

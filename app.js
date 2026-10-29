@@ -398,7 +398,7 @@
       <article class="quinta">
         ${item.flyer ? `<img class="story-shot" src="${esc(item.flyer)}" alt="" />` : ""}
         <strong>${esc(item.host)}</strong>
-        <span>${esc(castWhen(item.starts_at))} · ${esc(castPlatform(item.platform))}</span>
+        <span>${esc(castWhen(item.starts_at))} · ${esc(castPlatform(item.platform))}${item.topic ? ` · ${esc(item.topic)}` : ""}</span>
         ${link ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">Abrir</a>` : ""}
       </article>`;
   }

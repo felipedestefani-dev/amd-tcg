@@ -676,35 +676,42 @@ create policy "escrita autenticada pokecasts" on public.pokecasts for all to aut
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
 
-  function castRows() {
-    if (!casts.length) return `<p class="empty">Nenhum Pokecast marcado.</p>`;
-    const now = Date.now();
-    return casts.map((row) => {
-      const gone = new Date(row.starts_at).getTime() < now;
-      return `
-        <div class="prow">
-          <button class="prow-open" type="button" data-cast-edit="${esc(row.id)}">
-            ${row.flyer ? `<img class="story-shot" src="${esc(row.flyer)}" alt="" />` : `<span class="story-shot"></span>`}
-            <span><strong>${esc(row.host || "Sem nome")}</strong><span>${esc(castWhen(row.starts_at))} · ${esc(castPlatform(row.platform))}${gone ? " · já foi" : ""}</span></span>
-          </button>
-          <div class="row-actions">
-            <button class="ghost danger row-delete" type="button" data-cast-remove="${esc(row.id)}">Excluir</button>
-          </div>
-        </div>`;
-    }).join("");
+  function castRows(list, empty) {
+    if (!list.length) return `<p class="empty">${empty}</p>`;
+    return list.map((row) => `
+      <div class="prow">
+        <button class="prow-open" type="button" data-cast-edit="${esc(row.id)}">
+          ${row.flyer ? `<img class="story-shot" src="${esc(row.flyer)}" alt="" />` : `<span class="story-shot"></span>`}
+          <span><strong>${esc(row.host || "Sem nome")}</strong><span>${esc(castWhen(row.starts_at))} · ${esc(castPlatform(row.platform))}</span></span>
+        </button>
+        <div class="row-actions">
+          <button class="ghost danger row-delete" type="button" data-cast-remove="${esc(row.id)}">Excluir</button>
+        </div>
+      </div>`).join("");
   }
 
   function pokecastView() {
     if (castsError) {
       const sql = /pokecasts|schema cache|relation/i.test(castsError) ? `<p>Rode no SQL Editor:</p><pre class="sql">${esc(CAST_SQL)}</pre>` : "";
-      return shell("Pokecast", "Próximos episódios da loja.", `<section class="panel"><p class="msg">${esc(castsError)}</p>${sql}</section>`);
+      return shell("Pokecast", "Próximos e episódios que já foram.", `<section class="panel"><p class="msg">${esc(castsError)}</p>${sql}</section>`);
     }
-    return shell("Pokecast", "Data, horário, plataforma, convidados e o flyer da story.", `
+    const now = Date.now();
+    const upcoming = casts.filter((row) => new Date(row.starts_at).getTime() >= now);
+    const past = casts.filter((row) => new Date(row.starts_at).getTime() < now).reverse();
+    return shell("Pokecast", "Próximos e episódios que já foram.", `
       <div class="toolbar">
-        <button class="solid" type="button" id="add-cast">Adicionar Pokecast</button>
+        <button class="solid" type="button" id="add-cast">Adicionar próximo</button>
+        <button class="ghost" type="button" id="add-cast-past">Adicionar episódio passado</button>
       </div>
       <div id="editor-slot"></div>
-      <div class="plist" id="cast-list">${castRows()}</div>`);
+      <section class="panel">
+        <h2>Próximos</h2>
+        <div class="plist">${castRows(upcoming, "Nenhum Pokecast marcado.")}</div>
+      </section>
+      <section class="panel">
+        <h2>Passados</h2>
+        <div class="plist">${castRows(past, "Nenhum episódio passado.")}</div>
+      </section>`);
   }
 
   function setsView() {
@@ -831,7 +838,9 @@ create policy "escrita autenticada pokecasts" on public.pokecasts for all to aut
     const addBanner = document.getElementById("add-banner");
     if (addBanner) addBanner.onclick = () => { bannerEditing = "new"; openBannerForm(null); };
     const addCast = document.getElementById("add-cast");
-    if (addCast) addCast.onclick = () => { castEditing = "new"; openCastForm(null); };
+    if (addCast) addCast.onclick = () => { castEditing = "new"; openCastForm(null, false); };
+    const addPast = document.getElementById("add-cast-past");
+    if (addPast) addPast.onclick = () => { castEditing = "past"; openCastForm(null, true); };
   }
 
   async function paintDesk() {
@@ -852,7 +861,7 @@ create policy "escrita autenticada pokecasts" on public.pokecasts for all to aut
     bindDesk();
     if (view === "stock" && editing) openEditor(editing);
     if (view === "banners" && bannerEditing) openBannerForm(bannerEditing === "new" ? null : banners.find((item) => item.id === bannerEditing));
-    if (view === "pokecast" && castEditing) openCastForm(castEditing === "new" ? null : casts.find((item) => item.id === castEditing));
+    if (view === "pokecast" && castEditing) openCastForm(castEditing === "new" || castEditing === "past" ? null : casts.find((item) => item.id === castEditing), castEditing === "past");
   }
 
   async function loadBanners() {
@@ -1013,17 +1022,19 @@ create policy "escrita autenticada pokecasts" on public.pokecasts for all to aut
     casts = result.data || [];
   }
 
-  function openCastForm(row) {
+  function openCastForm(row, past) {
     const slot = document.getElementById("editor-slot");
     if (!slot) return;
     castFlyer = row?.flyer || "";
     const platform = ["jamble", "instagram", "youtube", "other"].includes(row?.platform) ? row.platform : "jamble";
     const options = [["jamble", "Jamble"], ["instagram", "Instagram"], ["youtube", "YouTube"], ["other", "Outra"]];
+    const gone = past || (row && new Date(row.starts_at).getTime() < Date.now());
     slot.innerHTML = `<div class="panel" style="box-shadow:none">
       <form id="cast-form" class="fields">
+        <h2>${row ? "Editar Pokecast" : gone ? "Episódio que já foi" : "Próximo Pokecast"}</h2>
         <img class="story-preview" id="cast-preview" alt="" ${castFlyer ? `src="${esc(castFlyer)}"` : "hidden"} />
         <label class="ghost photo-btn">Flyer da story<input id="cast-file" type="file" accept="image/*" hidden /></label>
-        <label>Data e horário<input name="starts" type="datetime-local" required value="${esc(castInputValue(row?.starts_at))}" /></label>
+        <label>Data e horário<input name="starts" type="datetime-local" required value="${esc(castInputValue(row?.starts_at))}" />${gone && !row ? `<small>Use a data em que o episódio aconteceu.</small>` : ""}</label>
         <label>Plataforma
           <select name="platform" id="cast-platform">
             ${options.map(([value, label]) => `<option value="${value}"${value === platform ? " selected" : ""}>${label}</option>`).join("")}
@@ -1034,7 +1045,7 @@ create policy "escrita autenticada pokecasts" on public.pokecasts for all to aut
         <label>Convidados<textarea name="guests" maxlength="200" rows="2">${esc(row?.guests || "")}</textarea></label>
         <label>Papo<textarea name="topic" maxlength="240" rows="3">${esc(row?.topic || "")}</textarea></label>
         <div class="actions">
-          <button class="solid" type="submit">${row ? "Salvar Pokecast" : "Adicionar Pokecast"}</button>
+          <button class="solid" type="submit">${row ? "Salvar Pokecast" : gone ? "Adicionar episódio passado" : "Adicionar próximo"}</button>
           <button class="ghost" type="button" id="cast-cancel">Cancelar</button>
         </div>
       </form>
