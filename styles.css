@@ -803,6 +803,9 @@ button, input, select { font: inherit; color: inherit; }
 }
 .foot p { margin: 0; }
 .foot .credit { color: var(--red); text-decoration: underline; font-weight: 700; }
+.foot .credit-logo { display: inline-block; vertical-align: middle; text-decoration: none; transition: opacity 0.2s; }
+.credit-logo img { display: block; width: auto; height: 18px; }
+.credit-logo:hover { opacity: 0.75; }
 .legal-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem 0.9rem; margin-top: 0.55rem; }
 .legal-nav a { color: var(--muted); text-decoration: none; }
 .legal-nav a:hover { color: var(--red); }
